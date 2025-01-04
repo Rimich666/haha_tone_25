@@ -1,4 +1,4 @@
-from src.setings import CHECK_IMAGES
+from src.setings import check_images
 
 
 def get_word_list(tr):
@@ -8,7 +8,7 @@ def get_word_list(tr):
 def get_items(words):
     return [
                 {
-                    "image_id": CHECK_IMAGES[word['check']],
+                    "image_id": check_images[word['check']],
                     "title": word['text'],
                     "description": f'Для установки или отмены выбора назовите индекс: {index}, или просто кликните',
                     "button": {

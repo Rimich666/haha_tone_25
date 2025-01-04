@@ -1,12 +1,10 @@
 import requests
+
+from responses.initialize import initialize
 from src.setings import *
 from src.state import State
 from src.word_list import *
 from repository.repository import base
-
-
-def initialize():
-    return {'state': State.START}, {'text': START_DESCRIPTION, 'end_session': False}
 
 
 def new_word(intents, state, rsp):
