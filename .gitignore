@@ -1,0 +1,7 @@
+# created by virtualenv automatically
+.venv
+.idea
+test_data
+src/repository/authorized_key.json
+jwt_token.txt
+model.pt
