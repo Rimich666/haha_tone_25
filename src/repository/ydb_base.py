@@ -161,11 +161,10 @@ class YdbBase:
     def select_lists(self, user):
         user_id = self.insert_user(user).rows[0].id
         lists = self.pool.execute_with_retries(f"SELECT id, name FROM user_lists WHERE user_id = {user_id};",)
-        print(lists)
         return lists[0].rows, user_id
 
     def select_free_names(self, names):
-        values = ', '.join(list(map(lambda name: f"('{name}')", names)))
+        values = ', '.join(list(map(lambda name: f"('{name}')", names))) if names else "('')"
         result = self.pool.execute_with_retries(f"""
         SELECT name FROM (SELECT DISTINCT * FROM
             (VALUES {values}) AS X(color))

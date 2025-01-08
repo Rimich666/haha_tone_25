@@ -7,7 +7,10 @@ from silero.silero import silero
 
 
 def create_list_name(user, name):
+    print('create_list_name')
     lists, user_id = base.select_lists(user)
+    print('create_list_name', user_id)
+    print('create_list_name', lists)
     names = [i.name for i in lists]
     if name == '' or name in names:
         free_names = base.select_free_names(names)

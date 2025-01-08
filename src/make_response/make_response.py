@@ -12,6 +12,7 @@ def make_response(intents, state, payload, session, request):
 
     def state_start():
         def insert_list():
+            print('list NEW')
             slots = intents['NEW']['slots']
             name, id = create_list_name(user_id, '' if not slots else slots['what']['value'])
             return {'state': State.CREATE_LIST, 'name': name, 'user': id}, {'text': descriptions['CREATE_LIST']}
@@ -43,7 +44,6 @@ def make_response(intents, state, payload, session, request):
         return state, resp
 
     switch_state = [state_start, make_new_list]
-    # print(request)
     if is_new:
         state, rsp = initialize()
     else:
