@@ -28,8 +28,8 @@ class YdbBase:
     def create_jwt_token(self):
         # Чтение закрытого ключа из JSON-файла
         with open(YdbBase.keys_file, 'r') as f:
-            obj = f.read()
-            obj = json.loads(obj)
+            file = f.read()
+            obj = json.loads(file)
             private_key = obj['private_key']
             key_id = obj['id']
             service_account_id = obj['service_account_id']

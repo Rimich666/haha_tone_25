@@ -4,6 +4,7 @@
 test_data
 src/repository/authorized_key.json
 src/repository/static_key.*
+src/load_resource/oauth_key.json
 jwt_token.txt
 model.pt
 *.pt
