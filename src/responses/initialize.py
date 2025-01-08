@@ -1,5 +1,5 @@
-from setings import descriptions, mode_images, mode, titles
-from state import State
+from setings.setings import descriptions, mode_images, mode, titles
+from setings.state import State
 
 
 def initialize():
@@ -17,11 +17,11 @@ def initialize():
                             'image_id': mode_images[v],
                             'title': titles[v],
                             'description': descriptions[v],
-                            '"button': {
-                                'payload': {'index': i},
+                            'button': {
+                                'payload': {'mode': v},
                                 'text': titles[v],
                             }
-                        } for i, v in enumerate(mode)
+                        } for v in mode
                     ]
                 }
             })

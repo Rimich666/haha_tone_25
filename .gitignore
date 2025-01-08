@@ -3,5 +3,8 @@
 .idea
 test_data
 src/repository/authorized_key.json
+src/repository/static_key.*
 jwt_token.txt
 model.pt
+*.pt
+audio

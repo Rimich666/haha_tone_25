@@ -1,10 +1,7 @@
 from flask import Flask, request
 
-from make_response import make_response
-# from repository.ydb_base import YdbBase
-import repository.repository
+from make_response.make_response import make_response
 
-# base = YdbBase()
 app = Flask(__name__)
 
 
@@ -16,7 +13,7 @@ def resp():
         req.get('nlu').get('intents'),
         request.json.get('state').get('session'),
         req.get('payload'),
-        request.json.get('session').get('new'),
+        request.json.get('session'),
         req
     )
 
