@@ -9,3 +9,4 @@ jwt_token.txt
 model.pt
 *.pt
 audio
+__pycache__

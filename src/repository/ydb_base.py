@@ -163,6 +163,13 @@ class YdbBase:
         lists = self.pool.execute_with_retries(f"SELECT id, name FROM user_lists WHERE user_id = {user_id};",)
         return lists[0].rows, user_id
 
+    def get_list_id(self, user, name):
+        res = self.pool.execute_with_retries(f"""
+        SELECT id, is_loaded FROM user_lists WHERE user_id in 
+            (SELECT id FROM users WHERE name = '{user}')
+            AND name = '{name}';""",)[0].rows
+        return (False, False) if not res else (res[0].id, res[0].is_loaded)
+
     def select_free_names(self, names):
         values = ', '.join(list(map(lambda name: f"('{name}')", names))) if names else "('')"
         result = self.pool.execute_with_retries(f"""
@@ -174,3 +181,55 @@ class YdbBase:
             WHERE color ISNULL
         """)
         return [row.name for row in result[0].rows]
+
+    def select_words_list(self, list_id):
+        res = self.pool.execute_with_retries(f"""
+        SELECT ru, de, file_path, ids.id as id, audio_id FROM words 
+        RIGHT JOIN 
+            (SELECT word_id as id, audio_id FROM user_words WHERE list_id = {list_id}) as ids
+        ON words.id = ids.id;    
+                """, )
+        return res[0].rows
+
+    def set_audio_id(self, id, audio_id):
+        res = self.pool.execute_with_retries(f"""
+            UPDATE user_words SET audio_id = '{audio_id}' WHERE id = {id} RETURNING id;
+        """)[0].rows
+        return res[0].id == id if res else False
+
+    def get_list_is_loaded(self, id):
+        res = self.pool.execute_with_retries(f"SELECT id, is_loaded FROM user_lists WHERE id = {id};")[0].rows
+        return (res[0].id, res[0].is_loaded) if res else (None, None)
+
+    def set_list_is_loaded(self, id, is_loaded):
+        res = self.pool.execute_with_retries(f"""
+            UPDATE user_lists SET is_loaded = {is_loaded} WHERE id = {id} RETURNING id, is_loaded;
+        """)[0].rows
+        print(res)
+        return (res[0].id, res[0].is_loaded) if res else (None, None)
+
+    def reset_list_is_loaded(self, list_id):
+        tx = self.session.transaction().begin()
+        tx.execute(
+            f"UPDATE user_words SET audio_id = NULL WHERE list_id = {list_id};"
+        )
+        tx.execute(
+            f"UPDATE user_lists SET is_loaded = NULL WHERE id = {list_id};"
+        )
+        tx.commit()
+
+
+if __name__ == '__main__':
+    base = YdbBase()
+    # id = base.get_list_id("EFE76D1449413314CDB750CCB4D3562A2F85DB599A5A465E98C494888474FE13", "Майский зеленый")
+    # print(id)
+    # id = base.get_list_id("EFE76D1449413314CDB750CCB4D3562A2F85DB599A5A465E98C494888474FE13", "Майский")
+    # print(id)
+    # words = base.select_words_list(1)
+    # print(words)
+    # res = base.set_audio_id(1, 'audio_id')
+    # id, is_loaded = base.get_list_is_loaded(3)
+    # print(id, is_loaded)
+    # res = base.set_list_is_loaded(1, False)
+    # print(res)
+    base.reset_list_is_loaded(1)

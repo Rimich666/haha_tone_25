@@ -1,3 +1,4 @@
+from responses.select_list import upload_list, check_load_list
 from .make_list import save_list, create_list_name
 from responses.initialize import initialize
 from setings.setings import *
@@ -12,7 +13,6 @@ def make_response(intents, state, payload, session, request):
 
     def state_start():
         def insert_list():
-            print('list NEW')
             slots = intents['NEW']['slots']
             name, id = create_list_name(user_id, '' if not slots else slots['what']['value'])
             return {'state': State.CREATE_LIST, 'name': name, 'user': id}, {'text': descriptions['CREATE_LIST']}
@@ -24,7 +24,12 @@ def make_response(intents, state, payload, session, request):
             return state, rsp
 
         def select_list():
-            return state, rsp
+            slots = intents['SELECT_LIST']['slots']
+            ret_state = {'state': State.SELECT_LIST}
+            if not slots:
+                return ret_state, {'text': 'Не расслышала имя списка.'}
+            ret_state, resp = upload_list(user_id, slots['what']['value'])
+            return ret_state, resp
 
         switch_mode = {
             'START': start_training,
@@ -43,7 +48,14 @@ def make_response(intents, state, payload, session, request):
         resp = save_list(state, request['original_utterance'], rsp, user_id)
         return state, resp
 
-    switch_state = [state_start, make_new_list]
+    def selection_list():
+        return check_load_list(state)
+
+    def list_is_ready():
+        print(state)
+        return state, rsp
+
+    switch_state = [state_start, make_new_list, selection_list, list_is_ready]
     if is_new:
         state, rsp = initialize()
     else:

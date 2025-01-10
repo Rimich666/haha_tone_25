@@ -56,3 +56,12 @@ SELECT id
                     (4, 'der nachmittag', 'время после полудня')) AS X(index, de, ru))
             as l
         ON (words.de = l.de AND words.ru = l.ru);
+
+SELECT id FROM user_lists WHERE user_id in
+(SELECT id FROM users WHERE name = 'EFE76D1449413314CDB750CCB4D3562A2F85DB599A5A465E98C494888474FE13')
+AND name = 'Майский зеленый';
+
+SELECT ru, de, file_path, ids.id as id, audio_id FROM words
+RIGHT JOIN
+    (SELECT word_id as id, audio_id FROM user_words WHERE list_id = 1) as ids
+ON words.id = ids.id;

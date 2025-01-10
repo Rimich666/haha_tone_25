@@ -56,3 +56,13 @@ CREATE TABLE IF NOT EXISTS user_words
     INDEX idx_words GLOBAL UNIQUE ON (list_id, word_id),
     PRIMARY KEY (id)
 );
+
+ALTER TABLE user_lists ADD is_loaded Bool;
+UPDATE user_lists SET is_loaded = NULL;
+
+ALTER TABLE user_words ADD is_processed Bool;
+ALTER TABLE user_words ADD audio_id utf8;
+UPDATE user_words SET is_processed = FALSE;
+
+ALTER TABLE words DROP audio_id;
+
