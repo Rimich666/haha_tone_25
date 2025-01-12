@@ -1,4 +1,5 @@
 from responses.select_list import upload_list, check_load_list
+from responses.training import send_word
 from .make_list import save_list, create_list_name
 from responses.initialize import initialize
 from setings.setings import *
@@ -11,25 +12,25 @@ def make_response(intents, state, payload, session, request):
     user_id = session.get('user').get('user_id')
     rsp = {'text': '', 'end_session': False}
 
+    def select_list():
+        slots = intents['SELECT_LIST']['slots']
+        ret_state = {'state': State.SELECT_LIST}
+        if not slots:
+            return ret_state, {'text': 'Не расслышала имя списка.'}
+        ret_state, resp = upload_list(user_id, slots['what']['value'])
+        return ret_state, resp
+
+    def show_lists():
+        return state, rsp
+
     def state_start():
         def insert_list():
             slots = intents['NEW']['slots']
             name, id = create_list_name(user_id, '' if not slots else slots['what']['value'])
             return {'state': State.CREATE_LIST, 'name': name, 'user': id}, {'text': descriptions['CREATE_LIST']}
 
-        def show_lists():
-            return state, rsp
-
         def start_training():
             return state, rsp
-
-        def select_list():
-            slots = intents['SELECT_LIST']['slots']
-            ret_state = {'state': State.SELECT_LIST}
-            if not slots:
-                return ret_state, {'text': 'Не расслышала имя списка.'}
-            ret_state, resp = upload_list(user_id, slots['what']['value'])
-            return ret_state, resp
 
         switch_mode = {
             'START': start_training,
@@ -43,8 +44,6 @@ def make_response(intents, state, payload, session, request):
         return switch_mode[payload['mode'] if payload else list(intents.keys())[0]]()
 
     def make_new_list():
-        print(state)
-        print('request = ', request)
         resp = save_list(state, request['original_utterance'], rsp, user_id)
         return state, resp
 
@@ -52,10 +51,29 @@ def make_response(intents, state, payload, session, request):
         return check_load_list(state)
 
     def list_is_ready():
-        print(state)
+        def start_training():
+            return send_word(state, rsp)
+            # return state, rsp
+
+        switch_mode = {
+            'START': start_training,
+            'SHOW': show_lists,
+            'SELECT_LIST': select_list
+        }
+
+        if not intents:
+            return state, rsp
+
+        return switch_mode[list(intents.keys())[0]]()
+
+    def question():
+        send_word(state, rsp, request['nlu']['tokens'])
         return state, rsp
 
-    switch_state = [state_start, make_new_list, selection_list, list_is_ready]
+    def end_list():
+        return state, rsp
+
+    switch_state = [state_start, make_new_list, selection_list, list_is_ready, question, end_list()]
     if is_new:
         state, rsp = initialize()
     else:

@@ -1,8 +1,6 @@
 import json
 import os
-
 import requests
-
 from repository.object_store import ObjectStore
 
 
@@ -10,14 +8,16 @@ class LoadAudio:
     oauth_key = os.path.join(os.path.dirname(__file__), 'oauth_key.json')
     host = 'https://dialogs.yandex.net'
 
-    def __init__(self):
+    @staticmethod
+    def get_skil():
         with open(LoadAudio.oauth_key, 'r') as f:
             file = f.read()
             obj = json.loads(file)
-            self.token = obj['key']
-            self.skill = obj['id']
+        return obj['id'], obj['key']
+
+    def __init__(self):
+        self.skill, self.token = LoadAudio.get_skil()
         self.store = ObjectStore()
-        pass
 
     def get_limit(self):
         response = requests.get(f'{self.host}/api/v1/status', headers={'Authorization': f'OAuth {self.token}'})
@@ -28,7 +28,7 @@ class LoadAudio:
         response = requests.post(
             f'{self.host}/api/v1/skills/{self.skill}/sounds',
             headers={'Authorization': f'OAuth {self.token}'},
-            files={'file': audio}
+            files={'file': (file_name, audio, 'audio/wav')}
         )
         return response.json()['sound']['id']
 

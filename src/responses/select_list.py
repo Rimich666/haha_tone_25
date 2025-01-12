@@ -2,9 +2,9 @@ import asyncio
 import json
 import threading
 import time
-
+from pathlib import Path
+from repository import YdbBase, base
 from load_resource.load_audio import LoadAudio
-from repository import base
 from responses.initialize import initialize
 from setings.state import State
 
@@ -43,7 +43,8 @@ def start_load_thread(list_id):
 
 
 def get_is_loaded(list_id, name):
-    words = {w['id']: {'ru': w['ru'], 'de': w['de'], 'audio_id': w['audio_id']} for w in base.select_words_list(list_id)}
+    words = {w['id']: {'ru': w['ru'], 'de': w['de'], 'audio_id': w['audio_id']} for w in
+             base.select_words_list(list_id)}
     index = list(words.keys())
 
     return (
@@ -52,7 +53,7 @@ def get_is_loaded(list_id, name):
             'name': name,
             'list_id': list_id,
             'words': json.dumps(words),
-            'index': json.dumps(index)
+            'ids': json.dumps(index)
         },
         {'text': f'Список {name} готов к работе'})
 
@@ -74,6 +75,7 @@ def check_load_list(state):
 
 def upload_list(user, name):
     print('select_list')
+    print(base)
     list_id, is_loaded = base.get_list_id(user, name)
 
     if not list_id:
@@ -87,3 +89,27 @@ def upload_list(user, name):
     thread = threading.Thread(target=start_load_thread, args=(list_id,))
     thread.start()
     return {'state': State.SELECT_LIST, 'name': name, 'list_id': list_id}, {'text': f'Загружаю список {name}'}
+
+
+if __name__ == '__main__':
+    l_id = 1
+    nm = 'майский зелёный'
+    pth = Path.joinpath(Path(__file__).parents[2], 'test_data')
+    original = Path.joinpath(pth, 'original.json')
+    bs = YdbBase()
+    wrds = {w['id']: {'ru': w['ru'], 'de': w['de'], 'audio_id': w['audio_id']} for w in
+            bs.select_words_list(l_id)}
+    ndx = list(wrds.keys())
+
+    stt = {
+        'state': State.IS_LOADED,
+        'name': nm,
+        'list_id': l_id,
+        'words': wrds,
+        'ids': ndx
+    }
+    with open(original, 'w') as file:
+        json.dump(stt, file)
+
+    print(pth)
+    pass
