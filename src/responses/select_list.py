@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from repository import YdbBase, base
 from load_resource.load_audio import LoadAudio
-from responses.initialize import initialize
+from responses.initialize import get_start_message
 from setings.state import State
 
 
@@ -62,8 +62,7 @@ def check_load_list(state):
     list_id, name = state["list_id"], state['name']
     id, is_loaded = base.get_list_is_loaded(list_id)
     if not id:
-        state, rsp = initialize()
-        rsp['text'] = f'Произошёл непредвиденный сбой, индекс списка {name} не найден'
+        state, rsp = get_start_message(f'Произошёл непредвиденный сбой, индекс списка {name} не найден')
         return {'state': State.START}, rsp
 
     if is_loaded is None:
@@ -79,8 +78,7 @@ def upload_list(user, name):
     list_id, is_loaded = base.get_list_id(user, name)
 
     if not list_id:
-        state, rsp = initialize()
-        rsp['text'] = f'У вас нет списка с именем {name}'
+        state, rsp = get_start_message(f'У вас нет списка с именем {name}')
         return {'state': State.START}, rsp
 
     if is_loaded:

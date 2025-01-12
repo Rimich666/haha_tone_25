@@ -1,11 +1,12 @@
+from repository import base
 from setings.setings import descriptions, mode_images, mode, titles
 from setings.state import State
 
 
-def initialize():
+def get_start_message(text):
     return ({'state': State.START},
             {
-                'text': descriptions['START_TEXT'],
+                'text': text,
                 'end_session': False,
                 'card': {
                     'type': 'ItemsList',
@@ -25,3 +26,8 @@ def initialize():
                     ]
                 }
             })
+
+
+def initialize(user_id):
+    is_exist = not not base.select_user(user_id).rows
+    return get_start_message(descriptions['START_TEXT']['OLD_USER' if is_exist else 'NEW_USER'])

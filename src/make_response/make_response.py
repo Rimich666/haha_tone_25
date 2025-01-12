@@ -75,7 +75,7 @@ def make_response(intents, state, payload, session, request):
 
     switch_state = [state_start, make_new_list, selection_list, list_is_ready, question, end_list()]
     if is_new:
-        state, rsp = initialize()
+        state, rsp = initialize(user_id)
     else:
         state, rsp = switch_state[state['state']]()
 

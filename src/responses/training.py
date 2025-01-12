@@ -74,5 +74,3 @@ if __name__ == "__main__":
         if state['state'] == State.END_LIST:
             break
     print(rsp, state['state'])
-'<speaker audio="dialogs-upload/5551b2ef-c873-47e5-819b-eb06fcfc89ca/874c6dcf-c804-4d1a-aa5f-e80ac9aad43c.opus">'
-'<speaker audio="dialogs-upload/5551b2ef-c873-47e5-819b-eb06fcfc89ca/874c6dcf-c804-4d1a-aa5f-e80ac9aad43c.opus>'
