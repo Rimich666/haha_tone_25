@@ -6,6 +6,10 @@ check_images = {
     False: '1540737/3767a411c46814372595'
 }
 
+"""
+    Стартовое сообщение
+"""
+
 mode_images = {
     'NEW': '1540737/a0df801b838190067c9d',
     'START': '965417/307b56a1df136b4784bb',
@@ -39,7 +43,10 @@ titles = {
     'SHOW': 'Показать списки',
 }
 
-mode = ['START', 'NEW', 'SHOW']
+MODE = {
+    'NEW_USER': ['NEW'],
+    'OLD_USER': ['START', 'NEW', 'SHOW']
+}
 
 ALFABET = 'ÄäÖöÜüß'
 

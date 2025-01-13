@@ -1,5 +1,6 @@
 from responses.select_list import upload_list, check_load_list
 from responses.training import send_word
+from .helpers import get_command
 from .make_list import save_list, create_list_name
 from responses.initialize import initialize
 from setings.setings import *
@@ -39,9 +40,9 @@ def make_response(intents, state, payload, session, request):
             'SELECT_LIST': select_list
         }
 
-        if not payload and not intents:
+        if not command:
             return state, rsp
-        return switch_mode[payload['mode'] if payload else list(intents.keys())[0]]()
+        return switch_mode[command]()
 
     def make_new_list():
         resp = save_list(state, request['original_utterance'], rsp, user_id)
@@ -53,7 +54,6 @@ def make_response(intents, state, payload, session, request):
     def list_is_ready():
         def start_training():
             return send_word(state, rsp)
-            # return state, rsp
 
         switch_mode = {
             'START': start_training,
@@ -73,26 +73,19 @@ def make_response(intents, state, payload, session, request):
     def end_list():
         return state, rsp
 
+    command = get_command(payload, intents)
+    if command == 'CLOSE':
+        return {
+            "version": '1.0',
+            "response": {'text': '', 'end_session': True}
+        }
+
     switch_state = [state_start, make_new_list, selection_list, list_is_ready, question, end_list()]
     if is_new:
         state, rsp = initialize(user_id)
     else:
         state, rsp = switch_state[state['state']]()
 
-    # elif state['state'] == state.START:
-    #     print(state)
-    # elif 'NEW' in intents:
-    #     state, rsp = new_word(intents, state, rsp)
-    # elif state['state'] == State.SELECT_WORDS:
-    #     if payload:
-    #         state, rsp = select_word(state, rsp, [payload['index']])
-    #     elif request['nlu']['entities']:
-    #         state, rsp = select_word(state, rsp, list(map(lambda i: int(i['value']),
-    #                     filter(lambda i: i['type'] == 'YANDEX.NUMBER', request['nlu']['entities']))))
-    #     elif 'SAVE' in intents:
-    #         print('save')
-    #         print(base)
-    print(rsp)
     return {
         "version": '1.0',
         "response": rsp,
