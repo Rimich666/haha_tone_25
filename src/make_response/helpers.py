@@ -5,3 +5,4 @@ def get_command(payload, intents):
             return mode
     if intents:
         return list(intents.keys())[0]
+    return 'NO_COMMAND'

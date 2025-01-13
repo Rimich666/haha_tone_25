@@ -1,3 +1,4 @@
+from responses.first_page import not_command
 from responses.select_list import upload_list, check_load_list
 from responses.training import send_word
 from .helpers import get_command
@@ -11,6 +12,7 @@ def make_response(intents, state, payload, session, request):
     print(session)
     is_new = session.get('new')
     user_id = session.get('user').get('user_id')
+    original = request['original_utterance']
     rsp = {'text': '', 'end_session': False}
 
     def select_list():
@@ -28,24 +30,26 @@ def make_response(intents, state, payload, session, request):
         def insert_list():
             slots = intents['NEW']['slots']
             name, id = create_list_name(user_id, '' if not slots else slots['what']['value'])
-            return {'state': State.CREATE_LIST, 'name': name, 'user': id}, {'text': descriptions['CREATE_LIST']}
+            return {'state': State.CREATE_LIST, 'name': name, 'user': id}, {'text': first_page_text['CREATE_LIST']}
 
         def start_training():
             return state, rsp
+
+        def no_command():
+            return not_command(user_id, original)
 
         switch_mode = {
             'START': start_training,
             'NEW': insert_list,
             'SHOW': show_lists,
-            'SELECT_LIST': select_list
+            'SELECT_LIST': select_list,
+            'NO_COMMAND': no_command
         }
 
-        if not command:
-            return state, rsp
         return switch_mode[command]()
 
     def make_new_list():
-        resp = save_list(state, request['original_utterance'], rsp, user_id)
+        resp = save_list(state, original, rsp, user_id)
         return state, resp
 
     def selection_list():
