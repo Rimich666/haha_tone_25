@@ -2,7 +2,7 @@ import json
 import random
 
 from load_resource.load_audio import LoadAudio
-from setings.setings import SPEAKER, EXCELLENT, FAIL, SIL, first_page_text
+from setings.setings import SPEAKER, EXCELLENT, FAIL, SIL, card_description
 from setings.state import State
 
 
@@ -11,8 +11,8 @@ def send_word(state, rsp, answer=None):
         state.pop('index', None)
         state['state'] = State.END_LIST
         state['ids'] = json.dumps(list(map(int, words.keys())))
-        rsp['tts'] = first_page_text['END_LIST']
-        rsp['text'] = first_page_text['END_LIST']
+        rsp['tts'] = card_description['END_LIST']
+        rsp['text'] = card_description['END_LIST']
         return state, rsp
 
     def check_answer():

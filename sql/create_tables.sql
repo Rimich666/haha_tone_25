@@ -1,10 +1,3 @@
-DROP TABLE IF EXISTS user_words;
-DROP TABLE IF EXISTS user_lists;
-DROP TABLE IF EXISTS words;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS colors;
-
-
 CREATE TABLE IF NOT EXISTS users
 (
     id serial NOT NULL,
@@ -58,7 +51,3 @@ CREATE TABLE IF NOT EXISTS user_words
     INDEX idx_words GLOBAL UNIQUE ON (list_id, word_id),
     PRIMARY KEY (id)
 );
-
-
-UPDATE user_lists SET is_loaded = NULL;
-UPDATE user_words SET is_processed = FALSE;

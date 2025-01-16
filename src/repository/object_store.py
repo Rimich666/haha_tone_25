@@ -21,12 +21,20 @@ class ObjectStore:
         return response['Body'].read()
 
     def get_list(self):
-        response = self.s3.list_objects(Bucket=self.bucket_name)['Contents']
-        for key in response:
-            print(key['Key'])
+        response = self.s3.list_objects(Bucket=self.bucket_name).get('Contents', [])
+        return response
 
     def upload_string(self, key, body):
         self.s3.put_object(Bucket=self.bucket_name, Key=key, Body=body)
+
+    def delete(self):
+        records = list(map(lambda item: {'Key': item['Key']}, self.get_list()))
+        response = self.s3.delete_objects(Bucket=self.bucket_name, Delete={'Objects': records})
+        return response
+
+    def delete_by_key(self, key):
+        response = self.s3.delete_object(Bucket=self.bucket_name, Key=key)
+        return response
 
 
 if __name__ == '__main__':

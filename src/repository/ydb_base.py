@@ -1,6 +1,8 @@
 import json
 import os.path
 import time
+from pathlib import Path
+
 import jwt
 import requests
 from datetime import datetime
@@ -13,6 +15,10 @@ class YdbBase:
     keys_file = os.path.join(os.path.dirname(__file__), 'authorized_key.json')
     endpoint = 'grpcs://ydb.serverless.yandexcloud.net:2135'
     base = '/ru-central1/b1g8c46f4fkf6jlpdg5n/etniis25oq2u6jasijmh'
+    sql = Path.joinpath(Path(__file__).parents[2], "sql")
+    create = Path.joinpath(sql, "create_tables.sql")
+    drop = Path.joinpath(sql, "drop_tables.sql")
+    clear = Path.joinpath(sql, "clear_tables.sql")
 
     def __init__(self):
         self.session = None
@@ -218,9 +224,29 @@ class YdbBase:
         )
         tx.commit()
 
+    def exec_file(self, fn):
+        with open(fn, 'r') as f:
+            query = f.read()
+        self.pool.execute_with_retries(query)
+
+    def create_tables(self):
+        self.exec_file(YdbBase.create)
+
+    def drop_tables(self):
+        self.exec_file(YdbBase.drop)
+
+    def clear_tables(self):
+        self.exec_file(YdbBase.clear)
+
+    def select_all_words(self):
+        res = self.pool.execute_with_retries("SELECT * FROM words")
+        return res[0].rows
+
 
 if __name__ == '__main__':
     base = YdbBase()
+    # base.drop_tables()
+    # base.create_tables()
     # id = base.get_list_id("EFE76D1449413314CDB750CCB4D3562A2F85DB599A5A465E98C494888474FE13", "Майский зеленый")
     # print(id)
     # id = base.get_list_id("EFE76D1449413314CDB750CCB4D3562A2F85DB599A5A465E98C494888474FE13", "Майский")
@@ -232,4 +258,4 @@ if __name__ == '__main__':
     # print(id, is_loaded)
     # res = base.set_list_is_loaded(1, False)
     # print(res)
-    base.reset_list_is_loaded(1)
+    # base.reset_list_is_loaded(1)

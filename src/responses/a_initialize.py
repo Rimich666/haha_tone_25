@@ -1,10 +1,11 @@
 from repository import base
-from setings.setings import first_page_text, mode_images, titles, MODE
+from setings.setings import mode_images, titles, card_description
 from setings.state import State
-from resorses import first
+from resources import first
 
 
-def get_start_message(text, tts='', mode=first.mode(True)):
+def get_start_message(text, tts='', is_old=True):
+    cards = first.cards(is_old)
     rsp = {
         'text': text,
         'end_session': False,
@@ -17,12 +18,12 @@ def get_start_message(text, tts='', mode=first.mode(True)):
                 {
                     'image_id': mode_images[v],
                     'title': titles[v],
-                    'description': first_page_text[v],
+                    'description': card_description[v],
                     'button': {
                         'payload': {'mode': v},
                         'text': titles[v],
                     }
-                } for v in mode
+                } for v in cards
             ]
         }
     }
@@ -32,5 +33,9 @@ def get_start_message(text, tts='', mode=first.mode(True)):
 
 
 def initialize(user_id):
-    is_exist = not not base.select_user(user_id).rows
-    return get_start_message(first.greeting.old.text(), '', first.mode(is_exist))
+    res = base.select_user(user_id).rows
+    id = res[0].id if res else None
+    text, tts = first.get_greeting(not not id)
+    state, rsp = get_start_message(text, tts, not not id)
+    state['user'] = id
+    return state, rsp

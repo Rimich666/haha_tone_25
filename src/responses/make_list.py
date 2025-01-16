@@ -1,4 +1,7 @@
-import random
+import asyncio
+import json
+import threading
+import time
 
 from repository import base
 from repository.object_store import ObjectStore
@@ -6,26 +9,12 @@ from setings.alfabet import Alfabet
 from silero.silero import silero
 
 
-def create_list_name(user, name):
-    lists, user_id = base.select_lists(user)
-    names = [i.name for i in lists]
-    if name == '' or name in names:
-        free_names = base.select_free_names(names)
-        return free_names[random.randrange(len(free_names))], user_id
-    return name, user_id
-
-
-def save_list(state, original, rsp, user=1):
+async def save_list(state, original, rsp, user_name):
     alfabet = Alfabet()
     store = ObjectStore()
 
-    def edit_row(row):
-        word_list = list(filter(lambda item: item != '', alfabet.trans(row).lower().split(' ')))
-        return [' '.join(filter(lambda wrd: alfabet.check(wrd, lang), word_list)) for lang in [Alfabet.de, Alfabet.ru]]
-
-    words = list(map(lambda item: edit_row(item), filter(lambda item: len(item) < 65, original.split('\n'))))
-    new_words = base.select_new_words(words)
-    for word in new_words:
+    async def create_word(word):
+        start = time.time()
         file_name = word[2]
         if not file_name:
             audio = silero(word[0])
@@ -33,9 +22,38 @@ def save_list(state, original, rsp, user=1):
             store.upload_string(file_name, audio)
 
         base.insert_word(word[1], word[0], file_name)
+        progress = json.loads(store.get_object(user_name))
+        store.upload_string(user_name, json.dumps({'all': progress['all'], 'cur': progress['cur'] + 1}))
+        return time.time() - start
 
+    def edit_row(row):
+        word_list = list(filter(lambda item: item != '', alfabet.trans(row).lower().split(' ')))
+        return [' '.join(filter(lambda wrd: alfabet.check(wrd, lang), word_list)) for lang in [Alfabet.de, Alfabet.ru]]
+
+    words = list(map(lambda item: edit_row(item), filter(lambda item: len(item) < 65, original.split('\n'))))
+    new_words = base.select_new_words(words)
+    store.upload_string(user_name, json.dumps({'all': len(new_words), 'cur': 0}))
+
+    async with asyncio.TaskGroup() as group:
+        tasks = [group.create_task(create_word(w)) for w in new_words]
+
+    result = sum([t.result() for t in tasks]) / len(tasks)
+    print(json.loads(store.get_object(user_name)))
+    print('средний тайм =', result)
+    store.delete_by_key(user_name)
     all_words = base.create_list(words, state['user'], state['name'])
-    print(user, state['name'], not not all_words)
+    print(user_name, ' ', state['name'], not not all_words)
+    return state, rsp
+
+
+def start_creat_thread(state, original, rsp, user_name):
+    asyncio.run(save_list(state, original, rsp, user_name))
+
+
+def make_list(state, original, rsp, user_name):
+    thread = threading.Thread(target=start_creat_thread, args=(state, original, rsp, user_name))
+    thread.start()
+    print('make_list', state, rsp)
     return state, rsp
 
 
@@ -108,4 +126,4 @@ die Konsequenz - (по)следствие'''
     die Konsequenz - (по)следствие'''
     fake_state = {'state': 1}
     fake_rsp = {'text': '', 'end_session': False}
-    result = save_list(fake_state, original_utterance2, fake_rsp)
+    res = make_list(fake_state, original_utterance, fake_rsp)

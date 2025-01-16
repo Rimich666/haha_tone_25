@@ -14,7 +14,8 @@ def resp():
         request.json.get('state').get('session'),
         req.get('payload'),
         request.json.get('session'),
-        req
+        req.get('nlu').get('tokens'),
+        req.get('original_utterance')
     )
 
 

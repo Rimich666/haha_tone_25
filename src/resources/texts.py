@@ -4,6 +4,7 @@ class Texts:
         self._tts = tts
 
     def text(self, *args):
+        print(args)
         return self._text.format(*args)
 
     def tts(self, *ars):

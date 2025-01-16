@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from repository import YdbBase, base
 from load_resource.load_audio import LoadAudio
-from responses.initialize import get_start_message
+from responses.a_initialize import get_start_message
 from setings.state import State
 
 
@@ -58,7 +58,7 @@ def get_is_loaded(list_id, name):
         {'text': f'Список {name} готов к работе'})
 
 
-def check_load_list(state):
+def check_load_list(state, rsp):
     list_id, name = state["list_id"], state['name']
     id, is_loaded = base.get_list_is_loaded(list_id)
     if not id:
