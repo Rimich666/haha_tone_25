@@ -7,6 +7,7 @@ from responses.training import send_word
 from helpers import get_command, get_slots, get_close_response, reset
 from responses.make_list import make_list
 from responses.a_initialize import initialize
+from responses.u_created_list import select_new
 
 
 def make_response(intents, state, payload, session, tokens, original):
@@ -66,9 +67,9 @@ def make_response(intents, state, payload, session, tokens, original):
             'NO_COMMAND': [skip_move],
         },
         {
-            'YES': [skip_move],
-            'NO': [skip_move],
-            'NO_COMMAND': [skip_move],
+            'YES': [select_new, state, rsp, command],
+            'NO': [select_new, state, rsp, command],
+            'NO_COMMAND': [select_new, state, rsp, command],
         },
     ]
 

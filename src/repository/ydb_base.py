@@ -128,7 +128,7 @@ class YdbBase:
             """
         )[0].rows[0]['id']
 
-        all_res = tx.execute(
+        head = tx.execute(
             f"""INSERT INTO user_words (word_id, list_id)
                     SELECT id as word_id, {list_id} as list_id
                     FROM words
@@ -137,13 +137,13 @@ class YdbBase:
                         (VALUES {values}) AS X(de, ru))
                         as l
                     ON (words.de = l.de AND words.ru = l.ru)
-                RETURNING id;""")
+                RETURNING word_id;""")[0].rows[:3]
         tx.commit()
-        return list_id
+        return list_id, head
 
     def select_without_file(self, words):
         values = ', '.join(list(map(lambda item: f"({item['id']}, Utf8('{item['de']}'))", words)))
-        print(values)
+        print('values', values)
         return self.pool.execute_with_retries(
             f"""
                 SELECT l.id as id, l.de as de FROM audio 
@@ -156,14 +156,14 @@ class YdbBase:
 
     def select_lists(self, user):
         user_id = self.insert_user(user).rows[0].id
-        lists = self.pool.execute_with_retries(f"SELECT id, name FROM user_lists WHERE user_id = {user_id};",)
+        lists = self.pool.execute_with_retries(f"SELECT id, name FROM user_lists WHERE user_id = {user_id};", )
         return lists[0].rows, user_id
 
     def get_list_id(self, user, name):
         res = self.pool.execute_with_retries(f"""
         SELECT id, is_loaded FROM user_lists WHERE user_id in 
             (SELECT id FROM users WHERE name = '{user}')
-            AND name = '{name}';""",)[0].rows
+            AND name = '{name}';""", )[0].rows
         return (False, False) if not res else (res[0].id, res[0].is_loaded)
 
     def select_free_names(self, names):
@@ -202,8 +202,21 @@ class YdbBase:
             f"SELECT file_path FROM audio WHERE de = '{word}';",
         )[0]
 
+    def get_added_words(self, list_id):
+        return self.pool.execute_with_retries(
+            f"SELECT id, audio_id FROM user_words WHERE list_id = '{list_id}' AND is_processed ISNULL;",
+        )[0]
+
+    def get_words_by_id(self, ids):
+        value = f"( {', '.join(ids)} )"
+        return self.pool.execute_with_retries(
+            f"SELECT id, de FROM words WHERE id IN {value};",
+        )[0].rows
+
     def get_list_is_loaded(self, id):
-        res = self.pool.execute_with_retries(f"SELECT id, is_loaded FROM user_lists WHERE id = {id};")[0].rows
+        res = self.pool.execute_with_retries(
+            f"SELECT id, is_loaded FROM user_lists WHERE id = {id};"
+        )[0].rows
         return (res[0].id, res[0].is_loaded) if res else (None, None)
 
     def set_list_is_loaded(self, id, is_loaded):
