@@ -91,31 +91,30 @@ class YdbBase:
             """,
         )[0]
 
-    def select_word(self, ru, de):
-        return self.session.transaction().execute(
-            f"SELECT id, ru, de FROM words WHERE ru = '{ru}' and de = '{de}';",
-            commit_tx=True
-        )
-
-    def insert_word(self, ru, de, audio):
-        word = self.select_word(ru, de)
-        if word[0].rows:
-            return word
+    def insert_audio(self, word, file_name):
         return self.pool.execute_with_retries(
-            f"INSERT INTO words (expire_at, updated_on, ru, de, file_path) "
-            f"VALUES (CurrentUtcDatetime(), CurrentUtcDatetime(), '{ru}', '{de}', '{audio}') RETURNING id, ru, de;"
-        )
+            f"""
+                INSERT INTO audio (de, file_path) 
+                VALUES ('{word}', '{file_name}');
+            """,
+        )[0]
 
-    def insert_color(self, values):
-        return self.session.transaction().execute(
-            f"REPLACE INTO colors (name, hex) "
-            f"VALUES {values};"
-        )
-
-    def add_word(self, ru, de, user):
-        user = self.insert_user(user)
-        word = self.insert_word(ru, de)
-        print(word[0].rows[0]['id'], user[0].rows[0]['id'])
+    def insert_new_words(self, words):
+        values = ', '.join(list(map(
+            lambda item: f"(CurrentUtcDatetime(), CurrentUtcDatetime(), Utf8('{item[0]}'), Utf8('{item[1]}'))", words)))
+        return self.pool.execute_with_retries(
+            f"""
+                INSERT INTO words (de, ru, expire_at, updated_on)
+                    SELECT l.de as de, l.ru as ru, l.expire as expire_at, l.updated as updated_on
+                    FROM words
+                    RIGHT JOIN
+                        (SELECT DISTINCT * FROM
+                        (VALUES {values}) AS X(expire, updated, de, ru)) as l
+                    ON (words.de = l.de AND words.ru = l.ru)
+                    WHERE id ISNULL
+                RETURNING id, de;
+            """,
+        )[0]
 
     def create_list(self, words, user, name):
         values = ', '.join(list(map(lambda item: f"('{item[0]}', '{item[1]}')", words)))
@@ -140,29 +139,20 @@ class YdbBase:
                     ON (words.de = l.de AND words.ru = l.ru)
                 RETURNING id;""")
         tx.commit()
-        return all_res[0].rows
+        return list_id
 
-    def select_new_words(self, words):
-        values = ', '.join(list(map(lambda item: f"({item[0]}, '{item[1][0]}', '{item[1][1]}')", enumerate(words))))
-        new_res = self.pool.execute_with_retries(
-            f"""SELECT new_words.de as de, new_words.ru as ru, new_words.index as index, words.file_path as file 
-            FROM (SELECT de, ru, index FROM (SELECT words.de as base, l.de as de, l.ru as ru, l.index as index
-                FROM words
-                RIGHT JOIN
-                    (SELECT DISTINCT * FROM
-                        (VALUES {values}) AS X(index, de, ru))
-                    as l
-                ON (words.de = l.de AND words.ru = l.ru)) as list_words
-                WHERE list_words.base ISNULL) as new_words
-            LEFT JOIN words
-            ON new_words.de = words.de;"""
-        )
-
-        return [(
-            row.de.decode('utf8'),
-            row.ru.decode('utf8'),
-            row.file,
-            row.index) for row in new_res[0].rows]
+    def select_without_file(self, words):
+        values = ', '.join(list(map(lambda item: f"({item['id']}, Utf8('{item['de']}'))", words)))
+        print(values)
+        return self.pool.execute_with_retries(
+            f"""
+                SELECT l.id as id, l.de as de FROM audio 
+                RIGHT JOIN  
+                    (SELECT DISTINCT id, de FROM
+                    (VALUES {values}) AS X(id, de)) as l
+                ON audio.de = l.de
+                WHERE file_path ISNULL;     
+            """)[0].rows
 
     def select_lists(self, user):
         user_id = self.insert_user(user).rows[0].id
@@ -197,11 +187,20 @@ class YdbBase:
                 """, )
         return res[0].rows
 
-    def set_audio_id(self, id, audio_id):
-        res = self.pool.execute_with_retries(f"""
-            UPDATE user_words SET audio_id = '{audio_id}' WHERE id = {id} RETURNING id;
-        """)[0].rows
+    def set_audio_id(self, *args):
+        query_text = f"""
+            UPDATE user_words SET audio_id = '{args[1]}' WHERE id = {args[0]} RETURNING id;
+        """ if len(args) == 2 else f"""
+            UPDATE user_words SET audio_id = '{args[2]}' WHERE word_id = {args[0]} AND list_id = {args[1]} RETURNING id;
+        """
+
+        res = self.pool.execute_with_retries(query_text)[0].rows
         return res[0].id == id if res else False
+
+    def get_file_path(self, word):
+        return self.pool.execute_with_retries(
+            f"SELECT file_path FROM audio WHERE de = '{word}';",
+        )[0]
 
     def get_list_is_loaded(self, id):
         res = self.pool.execute_with_retries(f"SELECT id, is_loaded FROM user_lists WHERE id = {id};")[0].rows
@@ -224,6 +223,11 @@ class YdbBase:
         )
         tx.commit()
 
+    def select_all_audio(self):
+        return self.pool.execute_with_retries(
+            f"SELECT audio_id FROM user_words WHERE audio_id NOTNULL;",
+        )[0].rows
+
     def exec_file(self, fn):
         with open(fn, 'r') as f:
             query = f.read()
@@ -238,9 +242,11 @@ class YdbBase:
     def clear_tables(self):
         self.exec_file(YdbBase.clear)
 
-    def select_all_words(self):
-        res = self.pool.execute_with_retries("SELECT * FROM words")
-        return res[0].rows
+    def insert_color(self, values):
+        return self.session.transaction().execute(
+            f"REPLACE INTO colors (name, hex) "
+            f"VALUES {values};"
+        )
 
 
 if __name__ == '__main__':

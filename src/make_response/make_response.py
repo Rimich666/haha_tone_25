@@ -26,6 +26,7 @@ def make_response(intents, state, payload, session, tokens, original):
     slots = get_slots(intents, command)
 
     def skip_move():
+        print('skip')
         return state, rsp
 
     switch_state = [
@@ -47,7 +48,7 @@ def make_response(intents, state, payload, session, tokens, original):
             'NO': [refuse_name, state, rsp]
         },
         {
-            'NO_COMMAND': [make_list, state, original, rsp, user_name],
+            'NO_COMMAND': [make_list, state, original, rsp],
         },
         {
             'NO_COMMAND': [check_load_list, state, rsp],
@@ -63,9 +64,15 @@ def make_response(intents, state, payload, session, tokens, original):
         },
         {
             'NO_COMMAND': [skip_move],
-        }]
+        },
+        {
+            'YES': [skip_move],
+            'NO': [skip_move],
+            'NO_COMMAND': [skip_move],
+        },
+    ]
 
-    print(resources.sources, node)
+    print(state, command)
     need_func = switch_state[node][resources.sources[node].check_command(command, is_old if node < 2 else None)]
     func = need_func[0]
     args = need_func[1:]

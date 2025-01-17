@@ -74,7 +74,6 @@ def check_load_list(state, rsp):
 
 def upload_list(user, name):
     print('select_list')
-    print(base)
     list_id, is_loaded = base.get_list_id(user, name)
 
     if not list_id:

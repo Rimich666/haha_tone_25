@@ -6,6 +6,7 @@ class Resource(object):
         self._intents = None
 
     def check_command(self, command, is_old=None):
+        print(command)
         if is_old is None:
             commands = self._intents
         else:

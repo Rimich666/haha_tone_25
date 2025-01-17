@@ -1,58 +1,58 @@
-import asyncio
-import json
 import threading
-import time
 
+from load_resource.load_audio import LoadAudio
 from repository import base
 from repository.object_store import ObjectStore
+from resources import create_list
 from setings.alfabet import Alfabet
+from setings.state import State
 from silero.silero import silero
 
 
-async def save_list(state, original, rsp, user_name):
-    alfabet = Alfabet()
+def save_list(*args):
     store = ObjectStore()
+    loader = LoadAudio()
 
-    async def create_word(word):
-        start = time.time()
-        file_name = word[2]
-        if not file_name:
-            audio = silero(word[0])
-            file_name = f'{word[0].replace(' ', '_')}.wav'
-            store.upload_string(file_name, audio)
+    def create_word(word):
+        record = base.get_file_path(word).rows
+        if record:
+            return record[0]['file_path']
+        audio = silero(word)
+        file_name = f'{word.replace(' ', '_')}.wav'
+        store.upload_string(file_name, audio)
+        base.insert_audio(word, file_name)
+        return file_name
+    print(args[0])
+    out_files = base.select_without_file(args[0])
+    for i, w in enumerate(out_files):
+        print(w, i)
+        file_path = create_word(w['de'])
+        if i < 3:
+            audio_id = loader.load_file(file_path)
+            base.set_audio_id(w['id'], args[1], audio_id)
 
-        base.insert_word(word[1], word[0], file_name)
-        progress = json.loads(store.get_object(user_name))
-        store.upload_string(user_name, json.dumps({'all': progress['all'], 'cur': progress['cur'] + 1}))
-        return time.time() - start
+    # print(new_words)
+    # print(out_files)
+
+
+def make_list(state, original, rsp):
+    alfabet = Alfabet()
 
     def edit_row(row):
         word_list = list(filter(lambda item: item != '', alfabet.trans(row).lower().split(' ')))
         return [' '.join(filter(lambda wrd: alfabet.check(wrd, lang), word_list)) for lang in [Alfabet.de, Alfabet.ru]]
 
     words = list(map(lambda item: edit_row(item), filter(lambda item: len(item) < 65, original.split('\n'))))
-    new_words = base.select_new_words(words)
-    store.upload_string(user_name, json.dumps({'all': len(new_words), 'cur': 0}))
-
-    async with asyncio.TaskGroup() as group:
-        tasks = [group.create_task(create_word(w)) for w in new_words]
-
-    result = sum([t.result() for t in tasks]) / len(tasks)
-    print(json.loads(store.get_object(user_name)))
-    print('средний тайм =', result)
-    store.delete_by_key(user_name)
-    all_words = base.create_list(words, state['user'], state['name'])
-    print(user_name, ' ', state['name'], not not all_words)
-    return state, rsp
-
-
-def start_creat_thread(state, original, rsp, user_name):
-    asyncio.run(save_list(state, original, rsp, user_name))
-
-
-def make_list(state, original, rsp, user_name):
-    thread = threading.Thread(target=start_creat_thread, args=(state, original, rsp, user_name))
+    new_words = base.insert_new_words(words).rows
+    print(new_words)
+    list_id = base.create_list(words, state['user'], state['name'])
+    thread = threading.Thread(target=save_list, args=(new_words, list_id))
     thread.start()
+
+    state['state'] = State.CREATED_LIST
+    state['list_id'] = list_id
+    rsp['text'] = create_list.list_created.text(state['name'])
+    rsp['tts'] = create_list.list_created.tts(state['name'])
     print('make_list', state, rsp)
     return state, rsp
 

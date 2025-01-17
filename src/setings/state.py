@@ -7,7 +7,7 @@ class State(object):
     IS_LOADED = 5
     QUESTION = 6
     END_LIST = 7
-    CREATION_LIST = 8
+    CREATED_LIST = 8
 
     SELECT_WORDS = 30
 

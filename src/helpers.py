@@ -1,6 +1,7 @@
 import random
 import threading
 
+from load_resource.load_audio import LoadAudio
 from repository import base
 from repository.object_store import ObjectStore
 
@@ -42,6 +43,11 @@ def create_list_name(user, name):
 def clear_all():
     # words = base.select_all_words()
     store = ObjectStore()
+    loder = LoadAudio()
+    ids = base.select_all_audio()
+    if ids:
+        for id in [i['audio_id']for i in ids]:
+            loder.delete(id)
     store.delete()
     base.clear_tables()
 

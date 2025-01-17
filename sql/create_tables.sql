@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS words
     updated_on Datetime,
     ru Utf8,
     de Utf8,
-    file_path Utf8,
     INDEX idx_words GLOBAL UNIQUE ON (ru, de),
 
     PRIMARY KEY (id)
@@ -49,5 +48,22 @@ CREATE TABLE IF NOT EXISTS user_words
     is_processed Bool,
     audio_id utf8,
     INDEX idx_words GLOBAL UNIQUE ON (list_id, word_id),
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS audio
+(
+    de Utf8 NOT NULL ,
+    file_path Utf8,
+
+    PRIMARY KEY (de)
+);
+
+CREATE TABLE IF NOT EXISTS audio
+(
+    id serial NOT NULL,
+    de Utf8,
+    file_path Utf8,
+
     PRIMARY KEY (id)
 );
