@@ -12,6 +12,9 @@ from silero.silero import silero
 def save_list(*args):
     store = ObjectStore()
     loader = LoadAudio()
+    print(args)
+    words, list_id, is_head = args
+    print(words, list_id, is_head)
 
     def create_word(word):
         record = base.get_file_path(word).rows
@@ -22,12 +25,12 @@ def save_list(*args):
         store.upload_string(file_name, audio)
         base.insert_audio(word, file_name)
         return file_name
-    out_files = base.select_without_file(args[0])
+    out_files = words if base.select_without_file(words) else words
     for i, w in enumerate(out_files):
         file_path = create_word(w['de'])
         if i < 3:
             audio_id = loader.load_file(file_path)
-            base.set_audio_id(w['id'], args[1], audio_id)
+            base.set_audio_id(w['id'], list_id, audio_id)
 
 
 def bad_list(state, rsp):
@@ -45,12 +48,13 @@ def make_list(state, original, rsp):
     if not words:
         return bad_list(state, rsp)
     new_words = base.insert_new_words(words).rows
+    is_head = not new_words
     print(new_words)
     list_id, head_id = base.create_list(words, state['user'], state['name'])
     print(head_id)
-    head = base.get_words_by_id([str(rec['word_id']) for rec in head_id])
+    head = base.get_words_by_id([str(rec['word_id']) for rec in head_id]) if is_head else []
     print(head)
-    thread = threading.Thread(target=save_list, args=(new_words if new_words else head, list_id))
+    thread = threading.Thread(target=save_list, args=(head if is_head else new_words, list_id, is_head))
     thread.start()
 
     state['state'] = State.CREATED_LIST

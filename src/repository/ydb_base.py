@@ -142,7 +142,7 @@ class YdbBase:
         return list_id, head
 
     def select_without_file(self, words):
-        values = ', '.join(list(map(lambda item: f"({item['id']}, Utf8('{item['de']}'))", words)))
+        values = ', '.join(list(map(lambda item: f"('{item['id']}', Utf8('{item['de']}'))", words)))
         print('values', values)
         return self.pool.execute_with_retries(
             f"""
@@ -204,7 +204,7 @@ class YdbBase:
 
     def get_added_words(self, list_id):
         return self.pool.execute_with_retries(
-            f"SELECT id, audio_id FROM user_words WHERE list_id = '{list_id}' AND is_processed ISNULL;",
+            f"SELECT id, audio_id FROM user_words WHERE list_id = {list_id} AND is_processed ISNULL;",
         )[0]
 
     def get_words_by_id(self, ids):
