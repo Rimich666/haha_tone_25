@@ -156,7 +156,10 @@ class YdbBase:
 
     def select_lists(self, user):
         user_id = self.insert_user(user).rows[0].id
-        lists = self.pool.execute_with_retries(f"SELECT id, name FROM user_lists WHERE user_id = {user_id};", )
+        lists = self.pool.execute_with_retries(
+            f"""
+                SELECT id, name FROM user_lists WHERE user_id = {user_id};
+            """, )
         return lists[0].rows, user_id
 
     def get_list_id(self, user, name):
@@ -180,10 +183,15 @@ class YdbBase:
 
     def select_words_list(self, list_id):
         res = self.pool.execute_with_retries(f"""
-        SELECT ru, de, file_path, ids.id as id, audio_id FROM words 
-        RIGHT JOIN 
-            (SELECT word_id as id, audio_id FROM user_words WHERE list_id = {list_id}) as ids
-        ON words.id = ids.id;    
+        SELECT ru, w.de as de, id, audio_id, is_processed, file_path 
+        FROM audio
+        LEFT JOIN 
+            (SELECT ru, de, ids.id as id, audio_id, is_processed 
+            FROM words 
+            RIGHT JOIN 
+                (SELECT word_id as id, is_processed, audio_id FROM user_words WHERE list_id = {list_id}) as ids
+            ON words.id = ids.id) as w
+        ON audio.de = w.de;
                 """, )
         return res[0].rows
 
@@ -197,15 +205,24 @@ class YdbBase:
         res = self.pool.execute_with_retries(query_text)[0].rows
         return res[0].id == id if res else False
 
+    def set_is_processed(self, id):
+        return self.pool.execute_with_retries(
+            f"""
+            UPDATE user_words SET is_processed = True WHERE id = {id} RETURNING id;""")[0].rows
+
     def get_file_path(self, word):
         return self.pool.execute_with_retries(
             f"SELECT file_path FROM audio WHERE de = '{word}';",
         )[0]
 
-    def get_added_words(self, list_id):
+    def get_added_words(self, list_id, is_exists):
+        condition = f" AND audio_id IS NOT NULL" if is_exists else ""
         return self.pool.execute_with_retries(
-            f"SELECT id, audio_id FROM user_words WHERE list_id = {list_id} AND is_processed ISNULL;",
-        )[0]
+            f"""SELECT id, audio_id 
+            FROM user_words 
+            WHERE list_id = {list_id} 
+            AND is_processed ISNULL{condition};""",
+        )[0].rows
 
     def get_words_by_id(self, ids):
         value = f"( {', '.join(ids)} )"

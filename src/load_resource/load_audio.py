@@ -42,7 +42,6 @@ class LoadAudio:
         response = requests.get(
             f'{self.host}/api/v1/skills/{self.skill}/sounds/{id}',
             headers={'Authorization': f'OAuth {self.token}'}).json()
-        print(response)
         return response['sound']['isProcessed']
 
 

@@ -29,12 +29,12 @@ def select_list(slots, user_name):
     return ret_state, resp
 
 
-def not_command(is_old, original):
+def not_command(is_old, original, user_id):
     texts = first.no_command(is_old)
     state, rsp = get_start_message(
         texts.text(original),
         texts.tts(original),
-        is_old
+        user_id
     )
     print(state, rsp)
     return state, rsp

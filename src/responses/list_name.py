@@ -32,7 +32,7 @@ def refuse_name(state, rsp):
     if (attempt - 1) == len_ext:
         is_old = not not state['user']
         text, tts = first.get_no_command(is_old)
-        state, rsp = get_start_message(text, tts, is_old)
+        state, rsp = get_start_message(text, tts, state['user'])
         return state, rsp
     state, rsp = req_list_name(state, rsp)
     state['name'] = ''

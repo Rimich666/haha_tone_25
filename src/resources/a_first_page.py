@@ -53,7 +53,7 @@ class First(Resource):
         )
 
         self._intents = UserType(
-            ['START', 'NEW', 'SHOW'],
+            ['START', 'NEW', 'SHOW', 'SELECT_LIST'],
             ['NEW', 'YES']
         )
 

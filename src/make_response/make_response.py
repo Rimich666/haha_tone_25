@@ -1,18 +1,17 @@
 import resources
-from responses import select_list
 from responses.first_page import not_command, insert_list, req_list_name, show_lists
 from responses.list_name import query_list_name, auto_name, confirm_name, refuse_name
 from responses.select_list import check_load_list
+from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
 from responses.training import send_word
 from helpers import get_command, get_slots, get_close_response, reset
 from responses.make_list import make_list
 from responses.a_initialize import initialize
-from responses.u_created_list import select_new
+from responses.u_created_list import confirm_select_new, refuse_select_new, unknown_select_new
 
 
 def make_response(intents, state, payload, session, tokens, original):
     command = get_command(payload, intents)
-
     if command == 'CLOSE':
         return get_close_response()
 
@@ -38,8 +37,8 @@ def make_response(intents, state, payload, session, tokens, original):
             'START': [skip_move],
             'NEW': [insert_list, slots, user_name, state, rsp],
             'SHOW': [show_lists, state, rsp],
-            'SELECT_LIST': [select_list, slots, user_name],
-            'NO_COMMAND': [not_command, is_old, original],
+            'SELECT_LIST': [select_list, user_name, slots, state, rsp],
+            'NO_COMMAND': [not_command, is_old, original, user_id],
             'YES': [req_list_name, state, rsp],
         },
         {
@@ -67,9 +66,14 @@ def make_response(intents, state, payload, session, tokens, original):
             'NO_COMMAND': [skip_move],
         },
         {
-            'YES': [select_new, state, rsp, command],
-            'NO': [select_new, state, rsp, command],
-            'NO_COMMAND': [select_new, state, rsp, command],
+            'YES': [confirm_select_new, state, user_name],
+            'NO': [refuse_select_new, state, rsp],
+            'NO_COMMAND': [unknown_select_new, state, rsp],
+        },
+        {
+            'YES': [confirm_select_name, user_name, state],
+            'NO': [refuse_select_name, state, rsp],
+            'NO_COMMAND': [on_tell_name, original, user_name, state, rsp],
         },
     ]
 
@@ -78,6 +82,7 @@ def make_response(intents, state, payload, session, tokens, original):
     func = need_func[0]
     args = need_func[1:]
     state, rsp = func(*args)
+    print(rsp)
 
     return {
         "version": '1.0',

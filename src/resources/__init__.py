@@ -2,6 +2,7 @@ from .a_first_page import First
 from .b_list_name import ListName
 from .create_list import CreateList
 from .created_list import CreatedList
+from .name_select_list import NameSelectList
 from .plug import Plug
 
 print('init texts')
@@ -10,6 +11,7 @@ list_name_res = ListName()
 create_list = CreateList()
 plug = Plug()
 created_list = CreatedList()
+name_select = NameSelectList()
 
 sources = [
     first,          # INIT
@@ -20,5 +22,6 @@ sources = [
     plug,           # IS_LOADED
     plug,           # QUESTION
     plug,           # END_LIST
-    created_list    # CREATED_LIST
+    created_list,   # CREATED_LIST
+    name_select     # NAME_SELECT
 ]

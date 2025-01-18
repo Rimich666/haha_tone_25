@@ -8,6 +8,7 @@ class State(object):
     QUESTION = 6
     END_LIST = 7
     CREATED_LIST = 8
+    NAME_SELECT = 9
 
     SELECT_WORDS = 30
 

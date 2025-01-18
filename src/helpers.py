@@ -41,7 +41,6 @@ def create_list_name(user, name):
 
 
 def clear_all():
-    # words = base.select_all_words()
     store = ObjectStore()
     loder = LoadAudio()
     ids = base.select_all_audio()
