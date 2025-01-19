@@ -182,22 +182,20 @@ class YdbBase:
         return [row.name for row in result[0].rows]
 
     def select_words_list(self, list_id, is_processed):
-        query = f"""
+        res = self.pool.execute_with_retries(f"""
         SELECT ru, w.de as de, id, audio_id, is_processed, file_path 
         FROM audio
         RIGHT JOIN 
             (SELECT ru, de, ids.id as id, audio_id, is_processed 
             FROM words 
             RIGHT JOIN 
-                (SELECT id, is_processed, audio_id 
+                (SELECT id, word_id, is_processed, audio_id 
                 FROM user_words 
                 WHERE list_id = {list_id} and is_processed {'' if is_processed else 'ISNULL'} 
                 ) as ids
-            ON words.id = ids.id) as w
+            ON words.id = ids.word_id) as w
         ON audio.de = w.de;
-        """
-        print(query)
-        res = self.pool.execute_with_retries(query)
+        """, )
         return res[0].rows
 
     def set_audio_id(self, *args):
