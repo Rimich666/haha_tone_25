@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS user_lists
     expire_at Datetime NOT NULL,
     updated_on Datetime,
     user_id Int64,
+    count Int32,
+    leaned Int32 DEFAULT 0,
     name utf8,
     is_loaded Bool DEFAULT FALSE,
     is_created Bool DEFAULT FALSE,

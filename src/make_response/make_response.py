@@ -1,19 +1,18 @@
 import resources
 from responses.first_page import not_command, insert_list, req_list_name, show_lists
 from responses.list_name import query_list_name, auto_name, confirm_name, refuse_name
-# from responses.select_list import check_load_list
+from responses.select_list import begin_again, resume
 from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
-from responses.training import send_word
+from responses.training import send_word, start_training, cancel_training
 from helpers import get_command, get_slots, get_close_response, reset, rebase
 from responses.make_list import make_list
-from responses.a_initialize import initialize
+from responses.a_initialize import initialize, get_start_message
 from responses.u_created_list import confirm_select_new, refuse_select_new, unknown_select_new
 from setings.state import State
 
 
 def make_response(intents, state, payload, session, tokens, original):
     command = get_command(payload, intents)
-    print(command)
     if command == 'CLOSE':
         return get_close_response()
 
@@ -32,7 +31,7 @@ def make_response(intents, state, payload, session, tokens, original):
 
     def skip_move():
         print('skip')
-        return state, rsp
+        return get_start_message('Тут ещё ничего не придумано', '', user_id)
 
     switch_state = {
         State.INIT: {
@@ -56,12 +55,14 @@ def make_response(intents, state, payload, session, tokens, original):
             'NO_COMMAND': [make_list, state, original, rsp],
         },
         State.SELECT_LIST: {
+            'AGAIN': [begin_again, state, rsp],
+            'RESUME': [resume, state, rsp],
             'NO_COMMAND': [skip_move],
         },
-        State.IS_LOADED: {
-            'START': [send_word, state, rsp],
-            'SHOW': [show_lists],
-            'SELECT_LIST': [select_list],
+        State.IS_READY: {
+            'YES': [start_training, state, rsp],
+            'NO': [cancel_training, state, rsp],
+            'START': [start_training, state, rsp],
             'NO_COMMAND': [skip_move],
         },
         State.QUESTION: {
@@ -71,12 +72,12 @@ def make_response(intents, state, payload, session, tokens, original):
             'NO_COMMAND': [skip_move],
         },
         State.CREATED_LIST: {
-            'YES': [confirm_select_new, state, user_name],
+            'YES': [confirm_select_new, state, user_name, rsp],
             'NO': [refuse_select_new, state, rsp],
             'NO_COMMAND': [unknown_select_new, state, rsp],
         },
         State.NAME_SELECT: {
-            'YES': [confirm_select_name, user_name, state],
+            'YES': [confirm_select_name, user_name, state, rsp],
             'NO': [refuse_select_name, state, rsp],
             'NO_COMMAND': [on_tell_name, original, user_name, state, rsp],
         },

@@ -64,15 +64,15 @@ def on_tell_name(original, user, state, rsp):
     state['name'] = name
     if not list_id:
         return lists_list(user, state, rsp)
-    return upload_list(user, name)
+    return upload_list(user, name, state, rsp)
 
 
-def confirm_select_name(user, state):
+def confirm_select_name(user, state, rsp):
     state.pop('index', None)
     state.pop('quest', None)
     state.pop('lists', None)
     name = state['name']
-    return upload_list(user, name)
+    return upload_list(user, name, state, rsp)
 
 
 def refuse_select_name(state, rsp):
@@ -85,4 +85,4 @@ def select_list(user, slots, state, rsp):
     name = slots['what']['value']
     state['name'] = name
     list_id, is_loaded = base.get_list_id(user, name)
-    return upload_list(user, name) if list_id else lists_list(user, state, rsp)
+    return upload_list(user, name, state, rsp) if list_id else lists_list(user, state, rsp)

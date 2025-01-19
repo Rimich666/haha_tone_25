@@ -115,20 +115,19 @@ class YdbBase:
             """,
         )[0]
 
-    def create_list(self, words, user, name):
+    def create_list(self, words, user, name, count):
         values = ', '.join(list(map(lambda item: f"('{item[0]}', '{item[1]}')", words)))
         tx = self.session.transaction().begin()
 
         list_id = tx.execute(
             f"""
-            INSERT INTO user_lists (expire_at, updated_on, user_id, name) 
-                VALUES  (CurrentUtcDatetime(), CurrentUtcDatetime(), {user}, '{name}')
+            INSERT INTO user_lists (expire_at, updated_on, user_id, name, count) 
+                VALUES  (CurrentUtcDatetime(), CurrentUtcDatetime(), {user}, '{name}', {count})
                 RETURNING id;
             """
         )[0].rows[0]['id']
 
-        head = tx.execute(
-            f"""INSERT INTO user_words (word_id, list_id)
+        query = f"""INSERT INTO user_words (word_id, list_id)
                     SELECT id as word_id, {list_id} as list_id
                     FROM words
                     INNER JOIN
@@ -136,7 +135,11 @@ class YdbBase:
                         (VALUES {values}) AS X(de, ru))
                         as l
                     ON (words.de = l.de AND words.ru = l.ru)
-                RETURNING word_id;""")[0].rows[:3]
+                RETURNING word_id;"""
+
+        print(query)
+
+        head = tx.execute(query)[0].rows[:3]
         tx.commit()
         return list_id, head
 
@@ -167,6 +170,14 @@ class YdbBase:
             AND name = '{name}';""", )[0].rows
         return (False, False) if not res else (res[0].id, res[0].is_loaded)
 
+    def get_list_info(self, user, name):
+        res = self.pool.execute_with_retries(f"""
+        SELECT id, is_loaded, count, leaned FROM user_lists WHERE user_id in 
+            (SELECT id FROM users WHERE name = '{user}')
+            AND name = '{name}';""", )[0].rows
+        return (False, False, 0, 0) if not res else\
+            (res[0].id, res[0].is_loaded, res[0].count, res[0].leaned)
+
     def select_free_names(self, names):
         values = ', '.join(list(map(lambda name: f"('{name}')", names))) if names else "('')"
         result = self.pool.execute_with_retries(f"""
@@ -181,20 +192,21 @@ class YdbBase:
 
     def select_words_list(self, list_id, is_processed):
         query = f"""
-        SELECT ru, w.de as de, w.id as id, audio_id, is_processed, file_path 
+        SELECT ru, w.de as de, w.id as id, audio_id, is_processed, file_path, leaned 
         FROM audio
         RIGHT JOIN 
-            (SELECT ru, de, ids.id as id, audio_id, is_processed 
+            (SELECT ru, de, ids.id as id, audio_id, is_processed, leaned 
             FROM words 
             RIGHT JOIN 
-                (SELECT id, word_id, is_processed, audio_id 
+                (SELECT id, word_id, is_processed, audio_id, leaned 
                 FROM user_words 
                 WHERE list_id = {list_id} and is_processed {'' if is_processed else 'ISNULL'} 
                 ) as ids
             ON words.id = ids.word_id) as w
         ON audio.de = w.de
-        WHERE NOT (file_path ISNULL);;
+        WHERE NOT (file_path ISNULL);
         """
+        print(query)
         res = self.pool.execute_with_retries(query)
         return res[0].rows
 
@@ -267,6 +279,12 @@ class YdbBase:
             f"UPDATE user_lists SET is_loaded = NULL WHERE id = {list_id};"
         )
         tx.commit()
+
+    def reset_words_learning(self, list_id):
+        self.pool.execute_with_retries(f"""
+            UPDATE user_words SET leaned = TRUE WHERE list_id = {list_id};
+        
+        """)
 
     def select_all_audio(self):
         return self.pool.execute_with_retries(

@@ -49,7 +49,7 @@ def make_list(state, original, rsp):
     new_words = base.insert_new_words(words).rows
     is_head = not new_words
     print(new_words)
-    list_id, head_id = base.create_list(words, state['user'], state['name'])
+    list_id, head_id = base.create_list(words, state['user'], state['name'], len(words))
     print(head_id)
     head = base.get_words_by_id([str(rec['word_id']) for rec in head_id]) if is_head else []
     print(head)

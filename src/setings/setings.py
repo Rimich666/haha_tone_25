@@ -40,3 +40,7 @@ EXCELLENT = '874c6dcf-c804-4d1a-aa5f-e80ac9aad43c'
 FAIL = '6fa4bf54-54e3-4b18-9f41-352112d51b42'
 SIL = 700
 CREATE_AUDIO_TIME = 1.5
+
+word_case = {
+    'слово': ['слово', 'слова', 'слов']
+}

@@ -6,6 +6,17 @@ from setings.setings import SPEAKER, EXCELLENT, FAIL, SIL, card_description
 from setings.state import State
 
 
+def start_training(state, rsp):
+    return state, rsp
+
+
+def cancel_training(state, rsp):
+    return state, rsp
+
+
+
+
+
 def send_word(state, rsp, answer=None):
     def end_list():
         state.pop('index', None)

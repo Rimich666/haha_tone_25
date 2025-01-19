@@ -1,7 +1,6 @@
 from helpers import create_list_name
 from responses.a_initialize import get_start_message
 from resources import first
-from responses.select_list import upload_list
 from setings.state import State
 
 
@@ -21,14 +20,6 @@ def show_lists(state, rsp):
     return state, rsp
 
 
-def select_list(slots, user_name):
-    ret_state = {'state': State.SELECT_LIST}
-    if not slots:
-        return ret_state, {'text': 'Не расслышала имя списка.'}
-    ret_state, resp = upload_list(user_name, slots['what']['value'])
-    return ret_state, resp
-
-
 def not_command(is_old, original, user_id):
     texts = first.no_command(is_old)
     state, rsp = get_start_message(
@@ -46,9 +37,3 @@ def req_list_name(state, rsp):
     state['state'] = State.REQUEST_NAME
     rsp['text'] = first.quest_list_name.text()
     return state, rsp
-
-
-
-
-
-

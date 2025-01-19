@@ -4,6 +4,7 @@ import threading
 from load_resource.load_audio import LoadAudio
 from repository import base
 from repository.object_store import ObjectStore
+from setings.setings import word_case
 
 
 def get_command(payload, intents):
@@ -42,6 +43,7 @@ def create_list_name(user, name):
 
 
 def clear_all():
+    print('clear_all')
     store = ObjectStore()
     loder = LoadAudio()
     ids = base.select_all_audio()
@@ -63,12 +65,28 @@ def recreate_all_table():
 
 
 def reset():
+    print('Обнуляем данные.')
     thread = threading.Thread(target=clear_all)
     thread.start()
+    print('Почему?')
     return get_close_response()
 
 
 def rebase():
+    print('Пересоздаю таблицы.')
     thread = threading.Thread(target=recreate_all_table())
     thread.start()
+    print('Почему?')
     return get_close_response()
+
+
+def get_word_case(number, key):
+    first = number % 10
+    second = (number // 10) % 10
+    if second == 1:
+        return word_case[key][2]
+    if first == 1:
+        return word_case[key][0]
+    if 1 < first < 5:
+        return word_case[key][1]
+    return word_case[key][2]

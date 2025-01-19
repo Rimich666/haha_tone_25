@@ -4,7 +4,7 @@ class State(object):
     REQUEST_NAME = 2
     CREATE_LIST = 3
     SELECT_LIST = 4
-    IS_LOADED = 5
+    IS_READY = 5
     QUESTION = 6
     END_LIST = 7
     CREATED_LIST = 8

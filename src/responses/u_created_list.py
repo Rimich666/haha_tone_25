@@ -13,10 +13,10 @@ def check_added(state):
             base.set_is_processed(word['id'])
 
 
-def confirm_select_new(state, user):
+def confirm_select_new(state, user, rsp):
     check_added(state)
     print('confirm_select_new', user, state['name'])
-    return upload_list(user, state['name'])
+    return upload_list(user, state['name'], state, rsp)
 
 
 def refuse_select_new(state, rsp):

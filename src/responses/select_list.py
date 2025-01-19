@@ -1,11 +1,14 @@
 import asyncio
-import json
 import threading
 import time
-from pathlib import Path
-from repository import YdbBase, base
+
+from helpers import get_word_case
+from repository import base
 from load_resource.load_audio import LoadAudio
+from resources import sources
 from setings.state import State
+
+STATE = State().SELECT_LIST
 
 
 async def load_audio(list_id):
@@ -31,94 +34,79 @@ async def load_audio(list_id):
         is_created = base.get_created_list(list_id)
         print('is_created:', is_created)
         words_list = base.select_words_list(list_id, False)
+        if not words_list:
+            break
         print(words_list)
 
         async with asyncio.TaskGroup() as group:
             tasks = [group.create_task(load_file(w.id, w.file_path, w.audio_id)) for w in words_list]
-        result = sum([t.result() for t in tasks]) / len(tasks) == 1
-        base.set_list_is_loaded(list_id, result)
+        # for t in tasks:
+        #     t.result()
+        # result = sum([t.result() for t in tasks]) / len(tasks) == 1
+
         print('Круг №', circle, time.time() - start, 'секунд')
         if is_created:
             break
+    base.set_list_is_loaded(list_id, True)
 
 
 def start_load_thread(list_id):
     asyncio.run(load_audio(list_id))
 
 
-# def get_is_loaded(list_id, name):
-#     words = {w['id']: {'ru': w['ru'], 'de': w['de'], 'audio_id': w['audio_id']} for w in
-#              base.select_words_list(list_id)}
-#     index = list(words.keys())
-#
-#     return (
-#         {
-#             'state': State.IS_LOADED,
-#             'name': name,
-#             'list_id': list_id,
-#             'words': json.dumps(words),
-#             'ids': json.dumps(index)
-#         },
-#         {'text': f'Список {name} готов к работе'})
+def ready_training(state, rsp):
+    # words = {
+    #     w['id']:
+    #         {
+    #             'ru': w['ru'],
+    #             'de': w['de'],
+    #             'audio_id': w['audio_id'],
+    #             'learn': w['learn']
+    #         } for w in base.select_words_list(list_id, True)}
+
+    # index = list(words.keys())
+
+    rsp['text'] = sources[STATE].ready.text()
+    rsp['tts'] = sources[STATE].ready.tts()
+
+    return state, rsp
 
 
-# def check_load_list(state, rsp):
-#     list_id, name = state["list_id"], state['name']
-#     id, is_loaded = base.get_list_is_loaded(list_id)
-#     if not id:
-#         state, rsp = get_start_message(f'Произошёл непредвиденный сбой, индекс списка {name} не найден')
-#         return {'state': State.START}, rsp
-#
-#     if is_loaded is None:
-#         return {'state': State.SELECT_LIST, 'name': name, 'list_id': list_id}, {'text': f'Список {name} загружается'}
-#
-#     if is_loaded:
-#         return get_is_loaded(list_id, name)
+def begin_again(state, rsp, list_id):
+    base.reset_words_learning(list_id)
+    state['full'] = True
+    return ready_training(state, rsp)
 
 
-def upload_list(user, name):
+def resume(state, rsp):
+    state['full'] = False
+    return state, rsp
+
+
+def whatever(original, state, rsp):
+    state, rsp = begin_again(state, rsp, state['list_id'])
+    rsp['text'] = rsp['text'] + sources[STATE].whatever.text(original)
+    rsp['tts'] = rsp['tts'] + sources[STATE].whatever.tts(original)
+    return state, rsp
+
+
+def full_or_not(count, leaned, name, state, rsp):
+    state['state'] = State.SELECT_LIST
+    case = get_word_case(leaned, 'слово')
+    rsp['text'] = sources[STATE].full_or_not.text(name, leaned, case, count)
+    rsp['tts'] = sources[STATE].full_or_not.tts(name, leaned, case, count)
+    return state, rsp
+
+
+def upload_list(user, name, state, rsp):
     print('select_list')
-    list_id, is_loaded = base.get_list_id(user, name)
+    list_id, _, count, leaned = base.get_list_info(user, name)
 
     thread = threading.Thread(target=start_load_thread, args=(list_id,))
     thread.start()
 
-    words = {w['id']: {'ru': w['ru'], 'de': w['de'], 'audio_id': w['audio_id']} for w in
-             base.select_words_list(list_id, True)}
-    index = list(words.keys())
-
-    return (
-        {
-            'state': State.IS_LOADED,
-            'name': name,
-            'list_id': list_id,
-            'words': json.dumps(words),
-            'ids': json.dumps(index)
-        },
-        {'text': f'Список {name} готов к работе'})
-
-    # return {'state': State.SELECT_LIST, 'name': name, 'list_id': list_id}, {'text': f'Загружаю список {name}'}
-
-
-if __name__ == '__main__':
-    l_id = 1
-    nm = 'майский зелёный'
-    pth = Path.joinpath(Path(__file__).parents[2], 'test_data')
-    original = Path.joinpath(pth, 'original.json')
-    bs = YdbBase()
-    wrds = {w['id']: {'ru': w['ru'], 'de': w['de'], 'audio_id': w['audio_id']} for w in
-            bs.select_words_list(l_id)}
-    ndx = list(wrds.keys())
-
-    stt = {
-        'state': State.IS_LOADED,
-        'name': nm,
-        'list_id': l_id,
-        'words': wrds,
-        'ids': ndx
-    }
-    with open(original, 'w') as file:
-        json.dump(stt, file)
-
-    print(pth)
-    pass
+    state['state'] = State.IS_READY
+    state['name'] = name
+    state['list_id'] = list_id
+    state['full'] = True
+    return full_or_not(count, leaned, name, state, rsp) if leaned else ready_training(state, rsp)
