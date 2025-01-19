@@ -55,8 +55,6 @@ def lists_list(user, state, rsp):
 
 
 def on_tell_name(original, user, state, rsp):
-    is_quest = state.get('quest', False)
-    print(is_quest)
     if not state.get('quest', False):
         rsp['text'] = name_select.dont_understand.text(original)
         rsp['tts'] = name_select.dont_understand.tts(original)
@@ -82,7 +80,6 @@ def refuse_select_name(state, rsp):
 
 
 def select_list(user, slots, state, rsp):
-    print('select_list', rsp, slots)
     if not slots:
         return query_select_name(state, rsp)
     name = slots['what']['value']

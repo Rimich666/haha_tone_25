@@ -5,7 +5,6 @@ import time
 from pathlib import Path
 from repository import YdbBase, base
 from load_resource.load_audio import LoadAudio
-from responses.a_initialize import get_start_message
 from setings.state import State
 
 
@@ -13,30 +12,34 @@ async def load_audio(list_id):
     loader = LoadAudio()
 
     async def load_file(id, path, audio):
-        if audio:
-            return True
-        audio_id = loader.load_file(path)
+        print(path)
+        audio_id = audio if audio else loader.load_file(path)
         res = isProcessed = False
         for _ in range(30):
             isProcessed = loader.get_status(audio_id)
             if isProcessed:
                 break
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.2)
         if isProcessed:
-            res = base.set_audio_id(id, audio_id)
+            res = base.set_audio_id(id, audio_id, is_processed=True)
         return isProcessed and res
 
-    start = time.time()
-    print("Loading start", start)
+    circle = 0
+    while True:
+        start = time.time()
+        circle += 1
+        is_created = base.get_created_list(list_id)
+        print('is_created:', is_created)
+        words_list = base.select_words_list(list_id, False)
+        print(words_list)
 
-    async with asyncio.TaskGroup() as group:
-        tasks = [group.create_task(load_file(w.id, w.file_path, w.audio_id))
-                 for w in base.select_words_list(list_id, False)]
-    result = sum([t.result() for t in tasks]) / len(tasks) == 1
-    base.set_list_is_loaded(list_id, result)
-    finish = time.time()
-    print("Loading finish", finish)
-    print("Loading time", finish - start)
+        async with asyncio.TaskGroup() as group:
+            tasks = [group.create_task(load_file(w.id, w.file_path, w.audio_id)) for w in words_list]
+        result = sum([t.result() for t in tasks]) / len(tasks) == 1
+        base.set_list_is_loaded(list_id, result)
+        print('Круг №', circle, time.time() - start, 'секунд')
+        if is_created:
+            break
 
 
 def start_load_thread(list_id):

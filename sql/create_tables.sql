@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS user_lists
     updated_on Datetime,
     user_id Int64,
     name utf8,
-    is_loaded Bool,
+    is_loaded Bool DEFAULT FALSE,
+    is_created Bool DEFAULT FALSE,
     INDEX idx_words GLOBAL UNIQUE ON (user_id, name),
     PRIMARY KEY (id)
 );
@@ -47,6 +48,7 @@ CREATE TABLE IF NOT EXISTS user_words
     word_id Int64,
     is_processed Bool,
     audio_id utf8,
+    leaned Bool DEFAULT FALSE,
     INDEX idx_words GLOBAL UNIQUE ON (list_id, word_id),
     PRIMARY KEY (id)
 );
@@ -57,13 +59,4 @@ CREATE TABLE IF NOT EXISTS audio
     file_path Utf8,
 
     PRIMARY KEY (de)
-);
-
-CREATE TABLE IF NOT EXISTS audio
-(
-    id serial NOT NULL,
-    de Utf8,
-    file_path Utf8,
-
-    PRIMARY KEY (id)
 );

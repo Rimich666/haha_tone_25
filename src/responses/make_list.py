@@ -12,9 +12,7 @@ from silero.silero import silero
 def save_list(*args):
     store = ObjectStore()
     loader = LoadAudio()
-    print(args)
     words, list_id, is_head = args
-    print(words, list_id, is_head)
 
     def create_word(word):
         record = base.get_file_path(word).rows
@@ -31,6 +29,7 @@ def save_list(*args):
         if i < 3:
             audio_id = loader.load_file(file_path)
             base.set_audio_id(w['id'], list_id, audio_id)
+    base.set_created_list(list_id)
 
 
 def bad_list(state, rsp):

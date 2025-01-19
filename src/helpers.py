@@ -25,6 +25,7 @@ def get_slots(intents, command):
 
 
 def get_close_response():
+    print('get_close_response')
     return {
         "version": '1.0',
         "response": {'text': '', 'end_session': True}
@@ -51,7 +52,23 @@ def clear_all():
     base.clear_tables()
 
 
+def recreate_all_table():
+    print('clear')
+    clear_all()
+    print('drop')
+    base.drop_tables()
+    print('create')
+    base.create_tables()
+    print("that's all")
+
+
 def reset():
     thread = threading.Thread(target=clear_all)
+    thread.start()
+    return get_close_response()
+
+
+def rebase():
+    thread = threading.Thread(target=recreate_all_table())
     thread.start()
     return get_close_response()

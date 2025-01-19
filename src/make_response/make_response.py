@@ -4,7 +4,7 @@ from responses.list_name import query_list_name, auto_name, confirm_name, refuse
 # from responses.select_list import check_load_list
 from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
 from responses.training import send_word
-from helpers import get_command, get_slots, get_close_response, reset
+from helpers import get_command, get_slots, get_close_response, reset, rebase
 from responses.make_list import make_list
 from responses.a_initialize import initialize
 from responses.u_created_list import confirm_select_new, refuse_select_new, unknown_select_new
@@ -13,11 +13,15 @@ from setings.state import State
 
 def make_response(intents, state, payload, session, tokens, original):
     command = get_command(payload, intents)
+    print(command)
     if command == 'CLOSE':
         return get_close_response()
 
     if command == 'RESET':
         return reset()
+
+    if command == 'REBASE':
+        return rebase()
 
     node = 0 if session.get('new') else state['state']
     user_name = session.get('user').get('user_id')

@@ -81,7 +81,6 @@ class YdbBase:
 
     def insert_user(self, name):
         user = self.select_user(name)
-        print('insert:', user)
         if user.rows:
             return user
         return self.pool.execute_with_retries(
@@ -143,7 +142,6 @@ class YdbBase:
 
     def select_without_file(self, words):
         values = ', '.join(list(map(lambda item: f"('{item['id']}', Utf8('{item['de']}'))", words)))
-        print('values', values)
         return self.pool.execute_with_retries(
             f"""
                 SELECT l.id as id, l.de as de FROM audio 
@@ -182,8 +180,8 @@ class YdbBase:
         return [row.name for row in result[0].rows]
 
     def select_words_list(self, list_id, is_processed):
-        res = self.pool.execute_with_retries(f"""
-        SELECT ru, w.de as de, id, audio_id, is_processed, file_path 
+        query = f"""
+        SELECT ru, w.de as de, w.id as id, audio_id, is_processed, file_path 
         FROM audio
         RIGHT JOIN 
             (SELECT ru, de, ids.id as id, audio_id, is_processed 
@@ -194,17 +192,22 @@ class YdbBase:
                 WHERE list_id = {list_id} and is_processed {'' if is_processed else 'ISNULL'} 
                 ) as ids
             ON words.id = ids.word_id) as w
-        ON audio.de = w.de;
-        """, )
+        ON audio.de = w.de
+        WHERE NOT (file_path ISNULL);;
+        """
+        res = self.pool.execute_with_retries(query)
         return res[0].rows
 
-    def set_audio_id(self, *args):
+    def set_audio_id(self, *args, is_processed=False):
         query_text = f"""
-            UPDATE user_words SET audio_id = '{args[1]}' WHERE id = {args[0]} RETURNING id;
+            UPDATE user_words 
+            SET audio_id = '{args[1]}'{', is_processed = True' if is_processed else ''} 
+            WHERE id = {args[0]} RETURNING id;
         """ if len(args) == 2 else f"""
-            UPDATE user_words SET audio_id = '{args[2]}' WHERE word_id = {args[0]} AND list_id = {args[1]} RETURNING id;
+            UPDATE user_words 
+            SET audio_id = '{args[2]}'{', is_processed = True' if is_processed else ''} 
+            WHERE word_id = {args[0]} AND list_id = {args[1]} RETURNING id;
         """
-        print(query_text)
         res = self.pool.execute_with_retries(query_text)[0].rows
         return res[0].id == id if res else False
 
@@ -243,8 +246,17 @@ class YdbBase:
         res = self.pool.execute_with_retries(f"""
             UPDATE user_lists SET is_loaded = {is_loaded} WHERE id = {id} RETURNING id, is_loaded;
         """)[0].rows
-        print(res)
         return (res[0].id, res[0].is_loaded) if res else (None, None)
+
+    def set_created_list(self, list_id):
+        res = self.pool.execute_with_retries(f"""
+            UPDATE user_lists SET is_created = TRUE WHERE id = {list_id} RETURNING id, is_loaded;
+        """)
+
+    def get_created_list(self, list_id):
+        return self.pool.execute_with_retries(f"""
+            SELECT is_created FROM user_lists WHERE id = {list_id};
+        """)[0].rows[0].is_created
 
     def reset_list_is_loaded(self, list_id):
         tx = self.session.transaction().begin()

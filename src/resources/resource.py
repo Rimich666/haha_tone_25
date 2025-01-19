@@ -1,6 +1,3 @@
-import abc
-
-
 class Resource(object):
     def __init__(self):
         self._intents = None
