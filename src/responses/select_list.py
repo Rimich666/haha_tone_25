@@ -30,7 +30,8 @@ async def load_audio(list_id):
     print("Loading start", start)
 
     async with asyncio.TaskGroup() as group:
-        tasks = [group.create_task(load_file(w.id, w.file_path, w.audio_id)) for w in base.select_words_list(list_id)]
+        tasks = [group.create_task(load_file(w.id, w.file_path, w.audio_id))
+                 for w in base.select_words_list(list_id, False)]
     result = sum([t.result() for t in tasks]) / len(tasks) == 1
     base.set_list_is_loaded(list_id, result)
     finish = time.time()
@@ -42,9 +43,45 @@ def start_load_thread(list_id):
     asyncio.run(load_audio(list_id))
 
 
-def get_is_loaded(list_id, name):
+# def get_is_loaded(list_id, name):
+#     words = {w['id']: {'ru': w['ru'], 'de': w['de'], 'audio_id': w['audio_id']} for w in
+#              base.select_words_list(list_id)}
+#     index = list(words.keys())
+#
+#     return (
+#         {
+#             'state': State.IS_LOADED,
+#             'name': name,
+#             'list_id': list_id,
+#             'words': json.dumps(words),
+#             'ids': json.dumps(index)
+#         },
+#         {'text': f'Список {name} готов к работе'})
+
+
+# def check_load_list(state, rsp):
+#     list_id, name = state["list_id"], state['name']
+#     id, is_loaded = base.get_list_is_loaded(list_id)
+#     if not id:
+#         state, rsp = get_start_message(f'Произошёл непредвиденный сбой, индекс списка {name} не найден')
+#         return {'state': State.START}, rsp
+#
+#     if is_loaded is None:
+#         return {'state': State.SELECT_LIST, 'name': name, 'list_id': list_id}, {'text': f'Список {name} загружается'}
+#
+#     if is_loaded:
+#         return get_is_loaded(list_id, name)
+
+
+def upload_list(user, name):
+    print('select_list')
+    list_id, is_loaded = base.get_list_id(user, name)
+
+    thread = threading.Thread(target=start_load_thread, args=(list_id,))
+    thread.start()
+
     words = {w['id']: {'ru': w['ru'], 'de': w['de'], 'audio_id': w['audio_id']} for w in
-             base.select_words_list(list_id)}
+             base.select_words_list(list_id, True)}
     index = list(words.keys())
 
     return (
@@ -57,35 +94,7 @@ def get_is_loaded(list_id, name):
         },
         {'text': f'Список {name} готов к работе'})
 
-
-def check_load_list(state, rsp):
-    list_id, name = state["list_id"], state['name']
-    id, is_loaded = base.get_list_is_loaded(list_id)
-    if not id:
-        state, rsp = get_start_message(f'Произошёл непредвиденный сбой, индекс списка {name} не найден')
-        return {'state': State.START}, rsp
-
-    if is_loaded is None:
-        return {'state': State.SELECT_LIST, 'name': name, 'list_id': list_id}, {'text': f'Список {name} загружается'}
-
-    if is_loaded:
-        return get_is_loaded(list_id, name)
-
-
-def upload_list(user, name):
-    print('select_list')
-    list_id, is_loaded = base.get_list_id(user, name)
-
-    if not list_id:
-        state, rsp = get_start_message(f'У вас нет списка с именем {name}')
-        return {'state': State.START}, rsp
-
-    if is_loaded:
-        return get_is_loaded(list_id, name)
-
-    thread = threading.Thread(target=start_load_thread, args=(list_id,))
-    thread.start()
-    return {'state': State.SELECT_LIST, 'name': name, 'list_id': list_id}, {'text': f'Загружаю список {name}'}
+    # return {'state': State.SELECT_LIST, 'name': name, 'list_id': list_id}, {'text': f'Загружаю список {name}'}
 
 
 if __name__ == '__main__':

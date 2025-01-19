@@ -82,9 +82,10 @@ def refuse_select_name(state, rsp):
 
 
 def select_list(user, slots, state, rsp):
-    print(rsp)
+    print('select_list', rsp, slots)
     if not slots:
         return query_select_name(state, rsp)
     name = slots['what']['value']
+    state['name'] = name
     list_id, is_loaded = base.get_list_id(user, name)
     return upload_list(user, name) if list_id else lists_list(user, state, rsp)
