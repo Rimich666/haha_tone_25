@@ -3,7 +3,7 @@ from responses.first_page import not_command, insert_list, req_list_name, show_l
 from responses.list_name import query_list_name, auto_name, confirm_name, refuse_name
 from responses.select_list import begin_again, resume
 from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
-from responses.training import send_word, start_training, cancel_training
+from responses.training import check_answer, start_training, cancel_training
 from helpers import get_command, get_slots, get_close_response, reset, rebase
 from responses.make_list import make_list
 from responses.a_initialize import initialize, get_start_message
@@ -61,12 +61,12 @@ def make_response(intents, state, payload, session, tokens, original):
         },
         State.IS_READY: {
             'YES': [start_training, state, rsp],
-            'NO': [cancel_training, state, rsp],
+            'NO': [skip_move],
             'START': [start_training, state, rsp],
             'NO_COMMAND': [skip_move],
         },
         State.QUESTION: {
-            'NO_COMMAND': [send_word, state, rsp, tokens],
+            'NO_COMMAND': [check_answer, state, rsp, tokens],
         },
         State.END_LIST: {
             'NO_COMMAND': [skip_move],

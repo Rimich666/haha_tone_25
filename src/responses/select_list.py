@@ -54,20 +54,9 @@ def start_load_thread(list_id):
     asyncio.run(load_audio(list_id))
 
 
-def ready_training(state, rsp):
-    # words = {
-    #     w['id']:
-    #         {
-    #             'ru': w['ru'],
-    #             'de': w['de'],
-    #             'audio_id': w['audio_id'],
-    #             'learn': w['learn']
-    #         } for w in base.select_words_list(list_id, True)}
-
-    # index = list(words.keys())
-
-    rsp['text'] = sources[STATE].ready.text()
-    rsp['tts'] = sources[STATE].ready.tts()
+def ready_training(state, rsp, name):
+    rsp['text'] = sources[STATE].ready.text(name)
+    rsp['tts'] = sources[STATE].ready.tts(name)
 
     return state, rsp
 
@@ -75,7 +64,7 @@ def ready_training(state, rsp):
 def begin_again(state, rsp, list_id):
     base.reset_words_learning(list_id)
     state['full'] = True
-    return ready_training(state, rsp)
+    return ready_training(state, rsp, state['name'])
 
 
 def resume(state, rsp):
@@ -109,4 +98,4 @@ def upload_list(user, name, state, rsp):
     state['name'] = name
     state['list_id'] = list_id
     state['full'] = True
-    return full_or_not(count, leaned, name, state, rsp) if leaned else ready_training(state, rsp)
+    return full_or_not(count, leaned, name, state, rsp) if leaned else ready_training(state, rsp, name)

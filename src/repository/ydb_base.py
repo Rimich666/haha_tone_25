@@ -190,7 +190,8 @@ class YdbBase:
         """)
         return [row.name for row in result[0].rows]
 
-    def select_words_list(self, list_id, is_processed):
+    def select_words_list(self, list_id, is_processed=None):
+        processed_string = '' if is_processed is None else f'AND is_processed {'' if is_processed else 'ISNULL'}'
         query = f"""
         SELECT ru, w.de as de, w.id as id, audio_id, is_processed, file_path, leaned 
         FROM audio
@@ -200,8 +201,9 @@ class YdbBase:
             RIGHT JOIN 
                 (SELECT id, word_id, is_processed, audio_id, leaned 
                 FROM user_words 
-                WHERE list_id = {list_id} and is_processed {'' if is_processed else 'ISNULL'} 
-                ) as ids
+                WHERE list_id = {list_id} 
+                    {processed_string}
+                 ) as ids
             ON words.id = ids.word_id) as w
         ON audio.de = w.de
         WHERE NOT (file_path ISNULL);
@@ -282,8 +284,12 @@ class YdbBase:
 
     def reset_words_learning(self, list_id):
         self.pool.execute_with_retries(f"""
-            UPDATE user_words SET leaned = TRUE WHERE list_id = {list_id};
-        
+            UPDATE user_words SET leaned = FALSE WHERE list_id = {list_id};
+        """)
+
+    def set_is_learn(self, id):
+        self.pool.execute_with_retries(f"""
+            UPDATE user_words SET leaned = TRUE WHERE id = {id};
         """)
 
     def select_all_audio(self):
