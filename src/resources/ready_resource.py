@@ -7,11 +7,6 @@ class Ready(Resource):
     def __init__(self):
         super().__init__()
         self._intents = ['YES', 'NO', 'START']
-        self.skil = LoadAudio.get_skil()[0]
-        self.speaker = 'speaker audio="dialogs-upload'
-        self.excellent = '874c6dcf-c804-4d1a-aa5f-e80ac9aad43c'
-        self.fail = '6fa4bf54-54e3-4b18-9f41-352112d51b42'
-        self.sil = 700
         self._end_list = Texts(
             'Поздравляю, вы выучили весь список слов и выражений! Хотите потренировать слова из других списков?',
             'Поздравляю, вы выучили весь список слов и выражений! sil <[{}]> '
@@ -25,7 +20,7 @@ class Ready(Resource):
         )
 
     def grade(self, excellent):
-        return '' if excellent \
+        return '' if excellent is None\
             else f'<{self.speaker}/{self.skil}/{self.excellent if excellent else self.fail}.opus"> sil <[{self.sil}]>'
 
     def question(self, word, excellent):

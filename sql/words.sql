@@ -62,3 +62,17 @@ RIGHT JOIN
             (Utf8('der nachmittag'))) AS X(de)) as l
 ON audio.de = l.de
 WHERE file_path ISNULL;
+
+SELECT * FROM (
+    SELECT id, is_loaded, count, learned
+    FROM user_lists
+    WHERE user_id in
+        (SELECT id FROM users WHERE name = 'EFE76D1449413314CDB750CCB4D3562A2F85DB599A5A465E98C494888474FE13')
+        AND name = 'вася'
+    ) as l
+    LEFT JOIN
+    (SELECT list_id, COUNT(id)
+    FROM user_words
+    WHERE learned
+    GROUP BY list_id) as c
+    ON l.id = c.list_id

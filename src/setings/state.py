@@ -9,6 +9,7 @@ class State(object):
     END_LIST = 7
     CREATED_LIST = 8
     NAME_SELECT = 9
+    HINT = 10
 
     SELECT_WORDS = 30
 

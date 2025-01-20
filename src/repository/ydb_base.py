@@ -137,8 +137,6 @@ class YdbBase:
                     ON (words.de = l.de AND words.ru = l.ru)
                 RETURNING word_id;"""
 
-        print(query)
-
         head = tx.execute(query)[0].rows[:3]
         tx.commit()
         return list_id, head
@@ -172,11 +170,21 @@ class YdbBase:
 
     def get_list_info(self, user, name):
         res = self.pool.execute_with_retries(f"""
-        SELECT id, is_loaded, count, leaned FROM user_lists WHERE user_id in 
-            (SELECT id FROM users WHERE name = '{user}')
-            AND name = '{name}';""", )[0].rows
+        SELECT * FROM (
+            SELECT id, is_loaded, count
+            FROM user_lists 
+            WHERE user_id in 
+                (SELECT id FROM users WHERE name = '{user}')
+                    AND name = '{name}'
+                ) as l
+            LEFT JOIN
+            (SELECT list_id, COUNT(id) as learned
+            FROM user_words 
+            WHERE learned
+            GROUP BY list_id) as c
+            ON l.id = c.list_id;""", )[0].rows
         return (False, False, 0, 0) if not res else\
-            (res[0].id, res[0].is_loaded, res[0].count, res[0].leaned)
+            (res[0].id, res[0].is_loaded, res[0].count, res[0].learned)
 
     def select_free_names(self, names):
         values = ', '.join(list(map(lambda name: f"('{name}')", names))) if names else "('')"
@@ -193,13 +201,13 @@ class YdbBase:
     def select_words_list(self, list_id, is_processed=None):
         processed_string = '' if is_processed is None else f'AND is_processed {'' if is_processed else 'ISNULL'}'
         query = f"""
-        SELECT ru, w.de as de, w.id as id, audio_id, is_processed, file_path, leaned 
+        SELECT ru, w.de as de, w.id as id, audio_id, is_processed, file_path, learned 
         FROM audio
         RIGHT JOIN 
-            (SELECT ru, de, ids.id as id, audio_id, is_processed, leaned 
+            (SELECT ru, de, ids.id as id, audio_id, is_processed, learned 
             FROM words 
             RIGHT JOIN 
-                (SELECT id, word_id, is_processed, audio_id, leaned 
+                (SELECT id, word_id, is_processed, audio_id, learned 
                 FROM user_words 
                 WHERE list_id = {list_id} 
                     {processed_string}
@@ -208,7 +216,6 @@ class YdbBase:
         ON audio.de = w.de
         WHERE NOT (file_path ISNULL);
         """
-        print(query)
         res = self.pool.execute_with_retries(query)
         return res[0].rows
 
@@ -284,13 +291,14 @@ class YdbBase:
 
     def reset_words_learning(self, list_id):
         self.pool.execute_with_retries(f"""
-            UPDATE user_words SET leaned = FALSE WHERE list_id = {list_id};
+            UPDATE user_words SET learned = FALSE WHERE list_id = {list_id};
         """)
 
     def set_is_learn(self, id):
-        self.pool.execute_with_retries(f"""
-            UPDATE user_words SET leaned = TRUE WHERE id = {id};
-        """)
+        query = f"""
+            UPDATE user_words SET learned = TRUE WHERE id = {id};
+        """
+        self.pool.execute_with_retries(query)
 
     def select_all_audio(self):
         return self.pool.execute_with_retries(

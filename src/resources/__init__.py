@@ -1,7 +1,9 @@
 from .first_page_resource import First
+from .hunt_resource import Hint
 from .list_name_resource import ListName
 from .create_list_resource import CreateList
 from .created_list_resource import CreatedList
+from .question_resource import Question
 from .select_list_resource import SelectList
 from .list_name_select_resource import NameSelectList
 from .ready_resource import Ready
@@ -16,6 +18,8 @@ created_list = CreatedList()
 name_select = NameSelectList()
 select_list = SelectList()
 ready = Ready()
+question = Question()
+hint = Hint()
 
 sources = [
     first,          # INIT
@@ -24,8 +28,9 @@ sources = [
     create_list,    # CREATE_LIST
     select_list,    # SELECT_LIST
     ready,          # IS_READY
-    plug,           # QUESTION
+    question,       # QUESTION
     plug,           # END_LIST
     created_list,   # CREATED_LIST
-    name_select     # NAME_SELECT
+    name_select,    # NAME_SELECT
+    hint            # HINT
 ]

@@ -4,7 +4,6 @@ from responses.first_page import insert_list, req_list_name
 
 
 def query_list_name(state, tokens, rsp):
-    print(state)
     name = ' '.join(tokens[:2])
     state['name'] = name
     rsp['text'] = list_name_res.check.text(name)
@@ -16,7 +15,6 @@ def auto_name(state, rsp, user_name):
 
 
 def confirm_name(state, rsp, user_name):
-    print(state)
     name = state.get('name', '')
     attempt = state.pop('attempt', None)
 
@@ -28,7 +26,6 @@ def refuse_name(state, rsp):
     ext = list_name_res.extents
     len_ext = len(ext)
     attempt = state['attempt']
-    print('attempt', attempt)
     if (attempt - 1) == len_ext:
         is_old = not not state['user']
         text, tts = first.get_no_command(is_old)

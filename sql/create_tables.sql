@@ -35,7 +35,6 @@ CREATE TABLE IF NOT EXISTS user_lists
     updated_on Datetime,
     user_id Int64,
     count Int32,
-    leaned Int32 DEFAULT 0,
     name utf8,
     is_loaded Bool DEFAULT FALSE,
     is_created Bool DEFAULT FALSE,
@@ -50,7 +49,7 @@ CREATE TABLE IF NOT EXISTS user_words
     word_id Int64,
     is_processed Bool,
     audio_id utf8,
-    leaned Bool DEFAULT FALSE,
+    learned Bool DEFAULT FALSE,
     INDEX idx_words GLOBAL UNIQUE ON (list_id, word_id),
     PRIMARY KEY (id)
 );

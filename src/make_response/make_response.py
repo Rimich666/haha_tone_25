@@ -1,9 +1,11 @@
 import resources
 from responses.first_page import not_command, insert_list, req_list_name, show_lists
+from responses.hint_response import understand_hint, next_synonym, skip_word, spell, synonym
 from responses.list_name import query_list_name, auto_name, confirm_name, refuse_name
-from responses.select_list import begin_again, resume
+from responses.select_list import begin_again, resume, whatever
 from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
-from responses.training import check_answer, start_training, cancel_training
+from responses.training import start_training, cancel_training
+from responses.question_response import check_answer
 from helpers import get_command, get_slots, get_close_response, reset, rebase
 from responses.make_list import make_list
 from responses.a_initialize import initialize, get_start_message
@@ -30,7 +32,6 @@ def make_response(intents, state, payload, session, tokens, original):
     slots = get_slots(intents, command)
 
     def skip_move():
-        print('skip')
         return get_start_message('Тут ещё ничего не придумано', '', user_id)
 
     switch_state = {
@@ -57,7 +58,7 @@ def make_response(intents, state, payload, session, tokens, original):
         State.SELECT_LIST: {
             'AGAIN': [begin_again, state, rsp],
             'RESUME': [resume, state, rsp],
-            'NO_COMMAND': [skip_move],
+            'NO_COMMAND': [whatever, original, state, rsp],
         },
         State.IS_READY: {
             'YES': [start_training, state, rsp],
@@ -81,14 +82,21 @@ def make_response(intents, state, payload, session, tokens, original):
             'NO': [refuse_select_name, state, rsp],
             'NO_COMMAND': [on_tell_name, original, user_name, state, rsp],
         },
+        State.HINT: {
+            'NO_COMMAND': [understand_hint, state, rsp],
+            'NEXT': [next_synonym, state, rsp],
+            'SKIP': [skip_word, state, rsp],
+            'SPELL': [spell, state, rsp],
+            'SYNONYM': [synonym, state, rsp]
+        }
     }
 
-    print(state, command)
+    print('make_response', state)
+    print('make_response', command, node)
     need_func = switch_state[node][resources.sources[node].check_command(command, is_old if node < 2 else None)]
     func = need_func[0]
     args = need_func[1:]
     state, rsp = func(*args)
-    print(rsp)
 
     return {
         "version": '1.0',

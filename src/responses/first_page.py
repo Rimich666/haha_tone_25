@@ -27,7 +27,6 @@ def not_command(is_old, original, user_id):
         texts.tts(original),
         user_id
     )
-    print(state, rsp)
     return state, rsp
 
 

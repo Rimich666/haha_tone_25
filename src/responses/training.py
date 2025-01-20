@@ -8,31 +8,23 @@ STATE = State.IS_READY
 
 
 def query_words(list_id):
-    is_loaded = base.get_list_is_loaded(list_id)
+    print('querying words...')
+    _, is_loaded = base.get_list_is_loaded(list_id)
+    print(is_loaded)
     words = {
-        w['id']:
+        str(w['id']):
             {
                 'ru': w['ru'],
                 'de': w['de'],
                 'audio_id': w['audio_id'],
-                'learn': w['learn']
+                'learned': w['learned']
             } for w in base.select_words_list(list_id, True)}
 
-    index = list(item[0] for item in words.items() if item[1]['learn'] or not is_loaded)
+    print(words)
+
+    index = list(item[0] for item in words.items() if not item[1]['learned'] or not is_loaded)
 
     return words, index, is_loaded
-
-
-def check_answer(state, rsp, answer):
-    index = state['index']
-    words = json.loads(state['words'])
-    ids = json.loads(state['ids'])
-    right = words[str(ids[index])]['ru'].split(' ')
-    is_subset = set(right).issubset(answer)
-    if is_subset:
-        id = ids.pop(index)
-        base.set_is_learn(id)
-    return next_word(state, rsp, words, ids, is_subset)
 
 
 def end_list(state, rsp):
@@ -47,7 +39,6 @@ def next_word(state, rsp, words=None, ids=None, is_excellent=None):
         words, ids, is_loaded = query_words(state['list_id'])
         state['words'] = json.dumps(words)
         state['loaded'] = is_loaded
-
     count = len(ids)
     if count == 0:
         return end_list(state, rsp)
@@ -65,7 +56,7 @@ def next_word(state, rsp, words=None, ids=None, is_excellent=None):
 def start_training(state, rsp):
     state['loaded'] = False
     state, rsp = next_word(state, rsp)
-    rsp['tts'] = rsp['tts'] + sources[STATE].start()
+    rsp['tts'] = sources[STATE].start() + rsp['tts']
     return state, rsp
 
 

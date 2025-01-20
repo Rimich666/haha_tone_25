@@ -3,6 +3,7 @@
 import rusyllab
 from typing import List
 
+
 def extract_first_syllable(word: List[str]) -> str:
         """
     Извлекает первый слог из списка слов с использованием библиотеки `rusyllab`.

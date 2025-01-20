@@ -15,7 +15,6 @@ async def load_audio(list_id):
     loader = LoadAudio()
 
     async def load_file(id, path, audio):
-        print(path)
         audio_id = audio if audio else loader.load_file(path)
         res = isProcessed = False
         for _ in range(30):
@@ -55,6 +54,7 @@ def start_load_thread(list_id):
 
 
 def ready_training(state, rsp, name):
+    state['state'] = State.IS_READY
     rsp['text'] = sources[STATE].ready.text(name)
     rsp['tts'] = sources[STATE].ready.tts(name)
 
@@ -63,13 +63,11 @@ def ready_training(state, rsp, name):
 
 def begin_again(state, rsp, list_id):
     base.reset_words_learning(list_id)
-    state['full'] = True
     return ready_training(state, rsp, state['name'])
 
 
 def resume(state, rsp):
-    state['full'] = False
-    return state, rsp
+    return ready_training(state, rsp, state['name'])
 
 
 def whatever(original, state, rsp):
@@ -89,7 +87,7 @@ def full_or_not(count, leaned, name, state, rsp):
 
 def upload_list(user, name, state, rsp):
     print('select_list')
-    list_id, _, count, leaned = base.get_list_info(user, name)
+    list_id, _, count, learned = base.get_list_info(user, name)
 
     thread = threading.Thread(target=start_load_thread, args=(list_id,))
     thread.start()
@@ -97,5 +95,4 @@ def upload_list(user, name, state, rsp):
     state['state'] = State.IS_READY
     state['name'] = name
     state['list_id'] = list_id
-    state['full'] = True
-    return full_or_not(count, leaned, name, state, rsp) if leaned else ready_training(state, rsp, name)
+    return full_or_not(count, learned, name, state, rsp) if learned else ready_training(state, rsp, name)
