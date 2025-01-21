@@ -1,5 +1,5 @@
 from .first_page_resource import First
-from .hunt_resource import Hint
+from .hint_resource import Hint
 from .list_name_resource import ListName
 from .create_list_resource import CreateList
 from .created_list_resource import CreatedList

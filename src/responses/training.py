@@ -43,7 +43,6 @@ def next_word(state, rsp, words=None, ids=None, is_excellent=None):
     if count == 0:
         return end_list(state, rsp)
     index = 0 if count == 1 else random.randrange(count)
-
     word = words[str(ids[index])]
     state['index'] = index
     state['state'] = State.QUESTION
@@ -57,6 +56,11 @@ def start_training(state, rsp):
     state['loaded'] = False
     state, rsp = next_word(state, rsp)
     rsp['tts'] = sources[STATE].start() + rsp['tts']
+    return state, rsp
+
+
+def not_understand_training(state, rsp, original):
+    rsp['text'], rsp['tts'] = sources[STATE].dont_understand(original)
     return state, rsp
 
 

@@ -12,6 +12,10 @@ class Ready(Resource):
             'Поздравляю, вы выучили весь список слов и выражений! sil <[{}]> '
             'Хотите потренировать слова из других списков?'
         )
+        self._dont_understand = Texts(
+            'Ваша фраза {}, означает "ДА?" или "НЕТ?"',
+            'Ваша фраза {}, означает, "ДА?", или, "НЕТ?"',
+        )
         self._question = Texts(
             '{}: {}', ''
         )
@@ -32,3 +36,6 @@ class Ready(Resource):
 
     def start(self):
         return self._start.tts(self.sil)
+
+    def dont_understand(self, word):
+        return self._dont_understand.text(word), self._dont_understand.tts(word)

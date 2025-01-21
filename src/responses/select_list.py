@@ -2,7 +2,7 @@ import asyncio
 import threading
 import time
 
-from helpers import get_word_case
+from helpers.helpers import get_word_case
 from repository import base
 from load_resource.load_audio import LoadAudio
 from resources import sources
@@ -16,34 +16,38 @@ async def load_audio(list_id):
 
     async def load_file(id, path, audio):
         audio_id = audio if audio else loader.load_file(path)
-        res = isProcessed = False
+        is_processed = False
         for _ in range(30):
-            isProcessed = loader.get_status(audio_id)
-            if isProcessed:
+            is_processed = loader.get_status(audio_id)
+            if is_processed:
                 break
-            await asyncio.sleep(0.2)
-        if isProcessed:
+            await asyncio.sleep(0.3)
+        return id, audio_id, is_processed
+
+        if is_processed:
+            return id, audio_id
             res = base.set_audio_id(id, audio_id, is_processed=True)
-        return isProcessed and res
+        return is_processed and res
 
     circle = 0
     while True:
         start = time.time()
+        await asyncio.sleep(circle)
         circle += 1
         is_created = base.get_created_list(list_id)
-        print('is_created:', is_created)
+        print('\033[32m', 'is_created:', is_created, '\033[0m')
         words_list = base.select_words_list(list_id, False)
         if not words_list:
             break
-        print(words_list)
-
+        print('\033[32m', words_list, '\033[0m')
         async with asyncio.TaskGroup() as group:
             tasks = [group.create_task(load_file(w.id, w.file_path, w.audio_id)) for w in words_list]
-        # for t in tasks:
-        #     t.result()
-        # result = sum([t.result() for t in tasks]) / len(tasks) == 1
+        result = [t.result() for t in tasks]
+        print(result)
+        if result:
+            base.set_audio_ids(result)
 
-        print('Круг №', circle, time.time() - start, 'секунд')
+        print('\033[32m', 'Круг №', circle, time.time() - start, 'секунд', '\033[0m')
         if is_created:
             break
     base.set_list_is_loaded(list_id, True)
@@ -72,8 +76,8 @@ def resume(state, rsp):
 
 def whatever(original, state, rsp):
     state, rsp = begin_again(state, rsp, state['list_id'])
-    rsp['text'] = rsp['text'] + sources[STATE].whatever.text(original)
-    rsp['tts'] = rsp['tts'] + sources[STATE].whatever.tts(original)
+    rsp['text'] = sources[STATE].whatever.text(original) + rsp['text']
+    rsp['tts'] = sources[STATE].whatever.tts(original) + rsp['tts']
     return state, rsp
 
 
@@ -88,7 +92,7 @@ def full_or_not(count, leaned, name, state, rsp):
 def upload_list(user, name, state, rsp):
     print('select_list')
     list_id, _, count, learned = base.get_list_info(user, name)
-
+    print(learned)
     thread = threading.Thread(target=start_load_thread, args=(list_id,))
     thread.start()
 

@@ -1,5 +1,4 @@
-import json
-
+from helpers.helpers import parse_state
 from repository import base
 from resources import sources
 from responses.training import next_word
@@ -14,17 +13,9 @@ def select_hint(state, rsp):
     return state, rsp
 
 
-def parse_state(state):
-    index = state['index']
-    words = json.loads(state['words'])
-    ids = json.loads(state['ids'])
-    right = words[str(ids[index])]['ru'].split(' ')
-
-    return index, words, ids, right
-
-
 def check_answer(state, rsp, answer):
-    index, words, ids, right = parse_state(state)
+    index, words, ids = parse_state(state)
+    right = words[str(ids[index])]['ru'].split(' ')
     is_subset = set(right).issubset(answer)
     if is_subset:
         id = ids.pop(index)

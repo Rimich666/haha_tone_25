@@ -1,3 +1,4 @@
+import json
 import random
 import threading
 
@@ -90,3 +91,11 @@ def get_word_case(number, key):
     if 1 < first < 5:
         return word_case[key][1]
     return word_case[key][2]
+
+
+def parse_state(state):
+    index = state['index']
+    words = json.loads(state['words'])
+    ids = json.loads(state['ids'])
+
+    return index, words, ids

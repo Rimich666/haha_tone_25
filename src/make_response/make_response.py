@@ -4,9 +4,9 @@ from responses.hint_response import understand_hint, next_synonym, skip_word, sp
 from responses.list_name import query_list_name, auto_name, confirm_name, refuse_name
 from responses.select_list import begin_again, resume, whatever
 from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
-from responses.training import start_training, cancel_training
+from responses.training import start_training, not_understand_training
 from responses.question_response import check_answer
-from helpers import get_command, get_slots, get_close_response, reset, rebase
+from helpers.helpers import get_command, get_slots, get_close_response, reset, rebase
 from responses.make_list import make_list
 from responses.a_initialize import initialize, get_start_message
 from responses.u_created_list import confirm_select_new, refuse_select_new, unknown_select_new
@@ -45,15 +45,19 @@ def make_response(intents, state, payload, session, tokens, original):
             'SELECT_LIST': [select_list, user_name, slots, state, rsp],
             'NO_COMMAND': [not_command, is_old, original, user_id],
             'YES': [req_list_name, state, rsp],
+            'HELP': [skip_move],
+            'WHAT_CAN': [skip_move]
         },
         State.REQUEST_NAME: {
             'AUTO': [auto_name, state, rsp, user_name],
             'NO_COMMAND': [query_list_name, state, tokens, rsp],
             'YES': [confirm_name, state, rsp, user_name],
-            'NO': [refuse_name, state, rsp]
+            'NO': [refuse_name, state, rsp],
+            'HELP': [skip_move],
         },
         State.CREATE_LIST: {
             'NO_COMMAND': [make_list, state, original, rsp],
+            'HELP': [skip_move],
         },
         State.SELECT_LIST: {
             'AGAIN': [begin_again, state, rsp],
@@ -64,7 +68,7 @@ def make_response(intents, state, payload, session, tokens, original):
             'YES': [start_training, state, rsp],
             'NO': [skip_move],
             'START': [start_training, state, rsp],
-            'NO_COMMAND': [skip_move],
+            'NO_COMMAND': [not_understand_training, state, rsp, original],
         },
         State.QUESTION: {
             'NO_COMMAND': [check_answer, state, rsp, tokens],
@@ -87,7 +91,8 @@ def make_response(intents, state, payload, session, tokens, original):
             'NEXT': [next_synonym, state, rsp],
             'SKIP': [skip_word, state, rsp],
             'SPELL': [spell, state, rsp],
-            'SYNONYM': [synonym, state, rsp]
+            'SYNONYM': [synonym, state, rsp],
+            'HELP': [skip_move],
         }
     }
 

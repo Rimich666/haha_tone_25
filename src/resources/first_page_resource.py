@@ -53,8 +53,8 @@ class First(Resource):
         )
 
         self._intents = UserType(
-            ['START', 'NEW', 'SHOW', 'SELECT_LIST'],
-            ['NEW', 'YES']
+            ['START', 'NEW', 'SHOW', 'SELECT_LIST', 'HELP', 'WHAT_CAN'],
+            ['NEW', 'YES', 'HELP', 'WHAT_CAN']
         )
 
         self._cards = UserType(

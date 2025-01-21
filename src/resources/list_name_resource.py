@@ -8,7 +8,7 @@ class ListName(Resource):
         self.check = Texts(
             'Вы хотите назвать список: "{}"?',
             'Вы хотите назвать список.  {}?')
-        self._intents = ['AUTO', 'YES', 'NO']
+        self._intents = ['AUTO', 'YES', 'NO', 'HELP']
         sil = 170
         self.extents = [
             Texts('', f'С первой попытки не всегда удаётся правильно назвать список. sil<[{sil}]>'

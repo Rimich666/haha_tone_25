@@ -219,6 +219,31 @@ class YdbBase:
         res = self.pool.execute_with_retries(query)
         return res[0].rows
 
+    def set_audio_ids(self, audio_ids):
+        audio, processed = (zip(* map(
+            lambda item: (f"WHEN {item[0]} THEN Utf8('{item[1]}')", f"WHEN {item[0]} THEN {item[2]}"), audio_ids)))
+        print(f"""
+            UPDATE user_words 
+            SET audio_id = CASE id
+                {'\n'.join(audio)}
+                ELSE audio_id END,
+            is_processed = CASE id
+                {'\n'.join(processed)}
+                ELSE is_processed END;
+            """)
+
+        self.pool.execute_with_retries(
+            f"""
+            UPDATE user_words 
+            SET audio_id = CASE id
+                {'\n'.join(audio)}
+                ELSE audio_id END,
+            is_processed = CASE id
+                {'\n'.join(processed)}
+                ELSE is_processed END;
+            """
+        )
+
     def set_audio_id(self, *args, is_processed=False):
         query_text = f"""
             UPDATE user_words 
