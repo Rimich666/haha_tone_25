@@ -21,12 +21,13 @@ def exception(attempt=5, ret_count=1):
                     if exec_count > 1:
                         print('\033[34m', 'Всё таки помогает:', exec_count, '\033[0m')
                 except (grpc.RpcError, BadSession) as e:
-                    if e.code() == grpc.StatusCode.RESOURCE_EXHAUSTED:
-                        if exec_count > attempt:
-                            print('\033[35m', 'И снова грёбаный Экибастуз.', exec_count)
-                            print('\033[33m', inspect.currentframe().f_back.f_code.co_name)
-                            print(f'{func.__name__}', '\033[0m')
-                        time.sleep(TIMEOUT_SECONDS)
+                    if isinstance(e, grpc.RpcError):
+                        if e.code() == grpc.StatusCode.RESOURCE_EXHAUSTED:
+                            if exec_count > attempt:
+                                print('\033[35m', 'И снова грёбаный Экибастуз.', exec_count)
+                                print('\033[33m', inspect.currentframe().f_back.f_code.co_name)
+                                print(f'{func.__name__}', '\033[0m')
+                            time.sleep(TIMEOUT_SECONDS)
                     else:
                         print('\033[36m', 'Необработанная ошибка', e)
                 if exec_count > attempt:

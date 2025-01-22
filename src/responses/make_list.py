@@ -3,10 +3,13 @@ import threading
 from load_resource.load_audio import LoadAudio
 from repository import base
 from repository.object_store import ObjectStore
-from resources import create_list
+from resources import create_list, sources
 from setings.alfabet import Alfabet
 from setings.state import State
 from silero.silero import silero
+
+
+STATE = State.CREATE_LIST
 
 
 def save_list(*args):
@@ -34,6 +37,7 @@ def save_list(*args):
 
 
 def bad_list(state, rsp):
+    rsp['text'], rsp['tts'] = sources[STATE].bad_list()
     return state, rsp
 
 
@@ -42,18 +46,15 @@ def make_list(state, original, rsp):
 
     def edit_row(row):
         word_list = list(filter(lambda item: item != '', alfabet.trans(row).lower().split(' ')))
+        word = [' '.join(filter(lambda wrd: alfabet.check(wrd, lang), word_list)) for lang in [Alfabet.de, Alfabet.ru]]
+        if len(word) != 2:
+            return []
+        if len(word[0]) * len(word[1]) == 0:
+            return []
         return [' '.join(filter(lambda wrd: alfabet.check(wrd, lang), word_list)) for lang in [Alfabet.de, Alfabet.ru]]
 
-    def parse_original():
-        print(original)
-        a = list(filter(lambda item: len(item) < 65, original.split('\n')))
-        print(a)
-        b = list(map(lambda item: edit_row(item), filter(lambda item: len(item) < 65, original.split('\n'))))
-        print(b)
-
-    parse_original()
-
-    words = list(map(lambda item: edit_row(item), filter(lambda item: len(item) < 65, original.split('\n'))))
+    words = list(filter(lambda word: not not word, map(
+        lambda item: edit_row(item), filter(lambda item: len(item) < 65, original.split('\n')))))
     if not words:
         return bad_list(state, rsp)
     new_words = base.insert_new_words(words).rows
@@ -65,8 +66,8 @@ def make_list(state, original, rsp):
 
     state['state'] = State.CREATED_LIST
     state['list_id'] = list_id
-    rsp['text'] = create_list.list_created.text(state['name'])
-    rsp['tts'] = create_list.list_created.tts(state['name'])
+    rsp['text'] = sources[STATE].list_created.text(state['name'])
+    rsp['tts'] = sources[STATE].list_created.tts(state['name'])
     return state, rsp
 
 
