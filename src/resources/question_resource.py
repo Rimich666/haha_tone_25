@@ -5,7 +5,7 @@ from resources.texts import Texts
 class Question(Resource):
     def __init__(self):
         super().__init__()
-        self._intents = []
+        self._intents = ['SKIP', 'STOP']
         self._select_hint = Texts(
             'Какая Вам нужна подсказка? Или пропустить слово?',
             'Какая Вам нужна подсказка? Или пропустить слово?'

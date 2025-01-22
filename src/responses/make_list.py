@@ -15,7 +15,7 @@ def save_list(*args):
     words, list_id, is_head = args
 
     def create_word(word):
-        record = base.get_file_path(word).rows
+        record = base.get_file_path(word)
         if record:
             return record[0]['file_path']
         audio = silero(word)
@@ -23,6 +23,7 @@ def save_list(*args):
         store.upload_string(file_name, audio)
         base.insert_audio(word, file_name)
         return file_name
+
     out_files = words if base.select_without_file(words) else words
     for i, w in enumerate(out_files):
         file_path = create_word(w['de'])
@@ -42,6 +43,15 @@ def make_list(state, original, rsp):
     def edit_row(row):
         word_list = list(filter(lambda item: item != '', alfabet.trans(row).lower().split(' ')))
         return [' '.join(filter(lambda wrd: alfabet.check(wrd, lang), word_list)) for lang in [Alfabet.de, Alfabet.ru]]
+
+    def parse_original():
+        print(original)
+        a = list(filter(lambda item: len(item) < 65, original.split('\n')))
+        print(a)
+        b = list(map(lambda item: edit_row(item), filter(lambda item: len(item) < 65, original.split('\n'))))
+        print(b)
+
+    parse_original()
 
     words = list(map(lambda item: edit_row(item), filter(lambda item: len(item) < 65, original.split('\n'))))
     if not words:

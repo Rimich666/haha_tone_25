@@ -72,6 +72,8 @@ def make_response(intents, state, payload, session, tokens, original):
         },
         State.QUESTION: {
             'NO_COMMAND': [check_answer, state, rsp, tokens],
+            'SKIP': [skip_move],
+            'STOP': [skip_move]
         },
         State.END_LIST: {
             'NO_COMMAND': [skip_move],
@@ -93,6 +95,7 @@ def make_response(intents, state, payload, session, tokens, original):
             'SPELL': [spell, state, rsp],
             'SYNONYM': [synonym, state, rsp],
             'HELP': [skip_move],
+            'STOP': [skip_move]
         }
     }
 

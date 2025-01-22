@@ -6,8 +6,9 @@ from pathlib import Path
 import jwt
 import requests
 from datetime import datetime
-
 import ydb
+
+from helpers.exception import exception
 
 
 class YdbBase:
@@ -90,6 +91,7 @@ class YdbBase:
             """,
         )[0]
 
+    @exception
     def insert_audio(self, word, file_name):
         return self.pool.execute_with_retries(
             f"""
@@ -168,6 +170,7 @@ class YdbBase:
             AND name = '{name}';""", )[0].rows
         return (False, False) if not res else (res[0].id, res[0].is_loaded)
 
+    @exception
     def get_list_info(self, user, name):
         res = self.pool.execute_with_retries(f"""
         SELECT * FROM (
@@ -198,6 +201,7 @@ class YdbBase:
         """)
         return [row.name for row in result[0].rows]
 
+    @exception
     def select_words_list(self, list_id, is_processed=None):
         processed_string = '' if is_processed is None else f'AND is_processed {'' if is_processed else 'ISNULL'}'
         query = f"""
@@ -219,18 +223,10 @@ class YdbBase:
         res = self.pool.execute_with_retries(query)
         return res[0].rows
 
+    @exception
     def set_audio_ids(self, audio_ids):
         audio, processed = (zip(* map(
             lambda item: (f"WHEN {item[0]} THEN Utf8('{item[1]}')", f"WHEN {item[0]} THEN {item[2]}"), audio_ids)))
-        print(f"""
-            UPDATE user_words 
-            SET audio_id = CASE id
-                {'\n'.join(audio)}
-                ELSE audio_id END,
-            is_processed = CASE id
-                {'\n'.join(processed)}
-                ELSE is_processed END;
-            """)
 
         self.pool.execute_with_retries(
             f"""
@@ -244,6 +240,7 @@ class YdbBase:
             """
         )
 
+    @exception
     def set_audio_id(self, *args, is_processed=False):
         query_text = f"""
             UPDATE user_words 
@@ -257,16 +254,19 @@ class YdbBase:
         res = self.pool.execute_with_retries(query_text)[0].rows
         return res[0].id == id if res else False
 
+    @exception
     def set_is_processed(self, id):
         return self.pool.execute_with_retries(
             f"""
             UPDATE user_words SET is_processed = True WHERE id = {id} RETURNING id;""")[0].rows
 
+    @exception
     def get_file_path(self, word):
         return self.pool.execute_with_retries(
             f"SELECT file_path FROM audio WHERE de = '{word}';",
-        )[0]
+        )[0].rows
 
+    @exception
     def get_added_words(self, list_id, is_exists):
         condition = f" AND audio_id IS NOT NULL" if is_exists else ""
         return self.pool.execute_with_retries(
@@ -282,23 +282,27 @@ class YdbBase:
             f"SELECT id, de FROM words WHERE id IN {value};",
         )[0].rows
 
+    @exception
     def get_list_is_loaded(self, id):
         res = self.pool.execute_with_retries(
             f"SELECT id, is_loaded FROM user_lists WHERE id = {id};"
         )[0].rows
         return (res[0].id, res[0].is_loaded) if res else (None, None)
 
+    @exception
     def set_list_is_loaded(self, id, is_loaded):
         res = self.pool.execute_with_retries(f"""
             UPDATE user_lists SET is_loaded = {is_loaded} WHERE id = {id} RETURNING id, is_loaded;
         """)[0].rows
         return (res[0].id, res[0].is_loaded) if res else (None, None)
 
+    @exception
     def set_created_list(self, list_id):
         res = self.pool.execute_with_retries(f"""
             UPDATE user_lists SET is_created = TRUE WHERE id = {list_id} RETURNING id, is_loaded;
         """)
 
+    @exception
     def get_created_list(self, list_id):
         return self.pool.execute_with_retries(f"""
             SELECT is_created FROM user_lists WHERE id = {list_id};
@@ -319,6 +323,7 @@ class YdbBase:
             UPDATE user_words SET learned = FALSE WHERE list_id = {list_id};
         """)
 
+    @exception
     def set_is_learn(self, id):
         query = f"""
             UPDATE user_words SET learned = TRUE WHERE id = {id};
