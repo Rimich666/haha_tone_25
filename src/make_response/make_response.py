@@ -1,5 +1,5 @@
 import resources
-from responses.first_page import not_command, insert_list, req_list_name, show_lists
+from responses.first_page import not_command, insert_list, req_list_name, show_lists, what_can, start_help
 from responses.hint_response import understand_hint, next_synonym, skip_word, spell, synonym
 from responses.list_name import query_list_name, auto_name, confirm_name, refuse_name
 from responses.select_list import begin_again, resume, whatever
@@ -39,14 +39,14 @@ def make_response(intents, state, payload, session, tokens, original):
             'NO_COMMAND': [initialize, user_name]
         },
         State.START: {
-            'START': [skip_move],
+            # 'START': [skip_move],
             'NEW': [insert_list, slots, user_name, state, rsp],
             'SHOW': [show_lists, state, rsp],
             'SELECT_LIST': [select_list, user_name, slots, state, rsp],
             'NO_COMMAND': [not_command, is_old, original, user_id],
             'YES': [req_list_name, state, rsp],
-            'HELP': [skip_move],
-            'WHAT_CAN': [skip_move]
+            'HELP': [start_help, state],
+            'WHAT_CAN': [what_can, state]
         },
         State.REQUEST_NAME: {
             'AUTO': [auto_name, state, rsp, user_name],

@@ -40,8 +40,7 @@ class First(Resource):
             Texts(
                 text + 'Доступные команды: \n'
                        '\t"Создай новый список + [Имя списка]"'
-                       '\t"Выбери список + <Имя списка из максимум двух слов>"'
-                       '\t"Покажи мои списки"',
+                       '\t"Выбери список + <Имя списка из максимум двух слов>"',
                 text + tts_new + '  Для выбора существующего списка скажите, выбери список и назовите имя списка. '
                 + text_exit
             ),
@@ -53,13 +52,24 @@ class First(Resource):
         )
 
         self._intents = UserType(
-            ['START', 'NEW', 'SHOW', 'SELECT_LIST', 'HELP', 'WHAT_CAN'],
+            ['NEW', 'SELECT_LIST', 'HELP', 'WHAT_CAN'],
             ['NEW', 'YES', 'HELP', 'WHAT_CAN']
         )
 
         self._cards = UserType(
             ['START', 'NEW', 'SHOW'],
             ['NEW']
+        )
+
+        self._what_can = Texts(
+            '',
+            'Я могу потренировать Вас переводу немецких слов по Вашим спискам.,'
+            'Могу рассказать что я могу. Анекдоты не травлю, очень пардон'
+        )
+
+        self._help = Texts(
+            '',
+            'Доступные команды: "Создай список.", "Выбери список.", "Бюргер, закройся.", "Что ты умеешь?" и "Помощь!"'
         )
 
     def no_command(self, is_old):
@@ -84,3 +94,9 @@ class First(Resource):
         text = self._no_command.old.text() if is_old else self._no_command.new.text()
         tts = self._no_command.old.tts() if is_old else self._no_command.new.tts()
         return text, tts
+
+    def get_wat_can(self):
+        return self._what_can.text(), self._what_can.tts()
+
+    def get_help(self):
+        return self._help.text(), self._help.tts()

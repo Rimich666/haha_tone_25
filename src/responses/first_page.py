@@ -1,7 +1,9 @@
 from helpers.helpers import create_list_name
 from responses.a_initialize import get_start_message
-from resources import first
+from resources import first, sources
 from setings.state import State
+
+STATE = State.START
 
 
 def insert_list(slots, user_name, state, rsp):
@@ -18,6 +20,18 @@ def insert_list(slots, user_name, state, rsp):
 
 def show_lists(state, rsp):
     return state, rsp
+
+
+def start_help(state):
+    text, tts = sources[STATE].get_help()
+    user = state.get('user', None)
+    return get_start_message(text, tts, user)
+
+
+def what_can(state):
+    text, tts = sources[STATE].get_wat_can()
+    user = state.get('user', None)
+    return get_start_message(text, tts, user)
 
 
 def not_command(is_old, original, user_id):
