@@ -1,9 +1,9 @@
 from helpers.helpers import parse_state
 from repository import base
 from resources import sources
-from responses.a_initialize import get_start_message
+from responses.initialize_response import get_start_message
 from responses.select_list_name import query_select_name
-from responses.training import next_word
+from responses.training_responses import next_word
 from setings.state import State
 
 STATE = State.END_LIST

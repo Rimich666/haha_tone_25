@@ -1,10 +1,9 @@
 import json
-
 from helpers.first_syllable import extract_first_syllable
 from helpers.helpers import parse_state
 from helpers.synonyms import get_synonyms
 from resources import sources
-from responses.training import next_word
+from responses.training_responses import next_word
 from setings.state import State
 
 STATE = State.HINT

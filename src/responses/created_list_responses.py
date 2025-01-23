@@ -1,6 +1,6 @@
 from load_resource.load_audio import LoadAudio
 from repository import base
-from responses.select_list import upload_list
+from responses.select_list_responses import upload_list
 
 
 def check_added(state):

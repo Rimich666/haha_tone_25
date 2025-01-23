@@ -1,9 +1,8 @@
 import random
-
 from repository import base
 from resources import name_select
-from responses.a_initialize import get_start_message
-from responses.select_list import upload_list
+from responses.initialize_response import get_start_message
+from responses.select_list_responses import upload_list
 from setings.state import State
 
 

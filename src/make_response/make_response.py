@@ -1,16 +1,16 @@
 import resources
+from responses.created_list_responses import confirm_select_new, refuse_select_new, unknown_select_new
 from responses.end_list_response import next_list, again, end_learn, unknown_end_list
-from responses.first_page import not_command, insert_list, req_list_name, show_lists, what_can, start_help
+from responses.first_page_response import insert_list, show_lists, not_command, req_list_name, start_help, what_can
 from responses.hint_response import understand_hint, next_synonym, skip_word, spell, synonym
-from responses.list_name import query_list_name, auto_name, confirm_name, refuse_name, help_request_name
-from responses.select_list import begin_again, resume, whatever
+from responses.initialize_response import get_start_message, initialize
+from responses.list_name_response import auto_name, confirm_name, refuse_name, help_request_name, query_list_name
+from responses.make_list_responses import make_list
 from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
-from responses.training import start_training, not_understand_training
+from responses.select_list_responses import begin_again, resume, whatever
 from responses.question_response import check_answer
 from helpers.helpers import get_command, get_slots, get_close_response, reset, rebase
-from responses.make_list import make_list
-from responses.a_initialize import initialize, get_start_message
-from responses.u_created_list import confirm_select_new, refuse_select_new, unknown_select_new
+from responses.training_responses import start_training, not_understand_training
 from setings.state import State
 
 

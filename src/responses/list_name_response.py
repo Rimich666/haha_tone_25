@@ -1,6 +1,6 @@
 from resources import list_name_res, first, sources
-from responses.a_initialize import get_start_message
-from responses.first_page import insert_list, req_list_name
+from responses.first_page_response import insert_list, req_list_name
+from responses.initialize_response import get_start_message
 from setings.state import State
 
 STATE = State.REQUEST_NAME

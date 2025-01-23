@@ -1,7 +1,7 @@
 from helpers.helpers import parse_state
 from repository import base
 from resources import sources
-from responses.training import next_word
+from responses.training_responses import next_word
 from setings.state import State
 
 STATE = State.QUESTION

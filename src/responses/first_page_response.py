@@ -1,6 +1,6 @@
 from helpers.helpers import create_list_name
-from responses.a_initialize import get_start_message
 from resources import first, sources
+from responses.initialize_response import get_start_message
 from setings.state import State
 
 STATE = State.START
