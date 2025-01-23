@@ -103,8 +103,8 @@ class YdbBase:
                         elif isinstance(e, grpc.RpcError):
                             print('\033[35m', 'Session not found', '\033[0m')
                             self.init_driver()
-                        else:
-                            print('\033[36m', 'Необработанная ошибка', e, '\033[0m')
+                        # else:
+                        #     print('\033[36m', 'Необработанная ошибка', e, '\033[0m')
                     if exec_count > attempt:
                         break
                 return result

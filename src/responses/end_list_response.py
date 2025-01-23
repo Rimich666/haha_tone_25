@@ -1,5 +1,7 @@
 from helpers.helpers import parse_state
 from repository import base
+from resources import sources
+from responses.a_initialize import get_start_message
 from responses.select_list_name import query_select_name
 from responses.training import next_word
 from setings.state import State
@@ -20,10 +22,12 @@ def again(state, rsp):
     return next_word(state, rsp, words, ids)
 
 
-def end_learn(state, rsp):
-    return state, rsp
+def end_learn(state):
+    text, tts = sources[STATE].back()
+    return get_start_message(text, tts, state['user'])
 
 
-def unknown(state, rsp, original):
-    return state, rsp
+def unknown_end_list(state, original):
+    text, tts = sources[STATE].not_understand(original)
+    return get_start_message(text, tts, state['user'])
 

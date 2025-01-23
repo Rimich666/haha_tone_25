@@ -1,5 +1,5 @@
 import resources
-from responses.end_list_response import next_list, again
+from responses.end_list_response import next_list, again, end_learn, unknown_end_list
 from responses.first_page import not_command, insert_list, req_list_name, show_lists, what_can, start_help
 from responses.hint_response import understand_hint, next_synonym, skip_word, spell, synonym
 from responses.list_name import query_list_name, auto_name, confirm_name, refuse_name, help_request_name
@@ -16,6 +16,7 @@ from setings.state import State
 
 def make_response(intents, state, payload, session, tokens, original):
     command = get_command(payload, intents)
+    print(command)
     if command == 'CLOSE':
         return get_close_response()
 
@@ -76,8 +77,8 @@ def make_response(intents, state, payload, session, tokens, original):
             'STOP': [skip_move]
         },
         State.END_LIST: {
-            'NO_COMMAND': [skip_move],
-            'NO': [skip_move],
+            'NO_COMMAND': [unknown_end_list, state],
+            'NO': [end_learn, state],
             'FIX': [again, state, rsp],
             'ANOTHER': [next_list, state, rsp],
         },

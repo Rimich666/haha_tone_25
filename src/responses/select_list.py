@@ -38,7 +38,9 @@ async def load_audio(list_id):
         print('\033[32m', 'is_created:', is_created, '\033[0m')
         words_list = base.select_words_list(list_id, False)
         if not words_list:
-            break
+            if is_created:
+                break
+            continue
         print('\033[32m', words_list, '\033[0m')
         async with asyncio.TaskGroup() as group:
             tasks = [group.create_task(load_file(w.id, w.file_path, w.audio_id)) for w in words_list]
