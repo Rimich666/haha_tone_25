@@ -94,7 +94,7 @@ def get_word_case(number, key):
 
 
 def parse_state(state):
-    index = state['index']
+    index = state.get('index', 0)
     words = json.loads(state['words'])
     ids = json.loads(state['ids'])
 

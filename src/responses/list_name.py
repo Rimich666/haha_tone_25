@@ -1,12 +1,17 @@
-from resources import list_name_res, first
+from resources import list_name_res, first, sources
 from responses.a_initialize import get_start_message
 from responses.first_page import insert_list, req_list_name
+from setings.state import State
+
+STATE = State.REQUEST_NAME
 
 
 def query_list_name(state, tokens, rsp):
     name = ' '.join(tokens[:2])
     state['name'] = name
-    rsp['text'] = list_name_res.check.text(name)
+    rsp['text'] = sources[STATE].check.text(name)
+    state['tts'] = sources[STATE].check.tts(name)
+
     return state, rsp
 
 
@@ -20,6 +25,14 @@ def confirm_name(state, rsp, user_name):
 
     return insert_list(
         None if attempt == len(list_name_res.extents) else {'what': {'value': name}}, user_name, state, rsp)
+
+
+def help_request_name(state, rsp):
+    print('help_request_name')
+    rsp['text'], rsp['tts'] = sources[STATE].help()
+    rsp['tts'] = rsp['tts'] + state.get('tts', '')
+    print(rsp['tts'])
+    return state, rsp
 
 
 def refuse_name(state, rsp):
@@ -39,4 +52,5 @@ def refuse_name(state, rsp):
     if text:
         rsp['text'] = text
     rsp['tts'] = tts
+    state['tts'] = tts
     return state, rsp

@@ -1,3 +1,4 @@
+from .end_list_resource import EndList
 from .first_page_resource import First
 from .hint_resource import Hint
 from .list_name_resource import ListName
@@ -20,6 +21,7 @@ select_list = SelectList()
 ready = Ready()
 question = Question()
 hint = Hint()
+end_list = EndList()
 
 sources = [
     first,          # INIT
@@ -29,7 +31,7 @@ sources = [
     select_list,    # SELECT_LIST
     ready,          # IS_READY
     question,       # QUESTION
-    plug,           # END_LIST
+    end_list,       # END_LIST
     created_list,   # CREATED_LIST
     name_select,    # NAME_SELECT
     hint            # HINT

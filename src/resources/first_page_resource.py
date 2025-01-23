@@ -57,8 +57,8 @@ class First(Resource):
         )
 
         self._cards = UserType(
-            ['START', 'NEW', 'SHOW'],
-            ['NEW']
+            ['NEW', 'SELECT_LIST', 'CLOSE'],
+            ['NEW', 'CLOSE']
         )
 
         self._what_can = Texts(

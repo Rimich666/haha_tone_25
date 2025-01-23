@@ -48,5 +48,6 @@ def req_list_name(state, rsp):
     attempt = state.get('attempt', 0)
     state['attempt'] = attempt + 1
     state['state'] = State.REQUEST_NAME
-    rsp['text'] = first.quest_list_name.text()
+    state['tts'] = rsp['text'] = first.quest_list_name.text()
+
     return state, rsp

@@ -1,14 +1,15 @@
+import inspect
 import json
 import os.path
 import time
 from pathlib import Path
 
+import grpc
 import jwt
 import requests
 from datetime import datetime
 import ydb
-
-from helpers.exception import exception
+from ydb import BadSession
 
 
 class YdbBase:
@@ -20,6 +21,7 @@ class YdbBase:
     create = Path.joinpath(sql, "create_tables.sql")
     drop = Path.joinpath(sql, "drop_tables.sql")
     clear = Path.joinpath(sql, "clear_tables.sql")
+    TIMEOUT_SECONDS = 0.002
 
     def __init__(self):
         self.session = None
@@ -75,6 +77,42 @@ class YdbBase:
         self.session = self.driver.table_client.session().create()
         self.pool = ydb.QuerySessionPool(self.driver)
 
+    def exception(self=None, attempt=5, ret_count=1):
+        def exception_inner(func):
+            def wrapper(self, *args, **kwargs):
+                print('\033[43m\033[30m', func.__name__, attempt, '\033[0m')
+                print(self)
+                need_exec = True
+                result = tuple([None for _ in range(ret_count)])
+                exec_count = 0
+                while need_exec:
+                    exec_count += 1
+                    try:
+                        result = func(self, *args, **kwargs)
+                        need_exec = False
+                        if exec_count > 1:
+                            print('\033[34m', 'Всё таки помогает:', exec_count, '\033[0m')
+                    except (grpc.RpcError, BadSession, Exception) as e:
+                        if isinstance(e, grpc.RpcError):
+                            if e.code() == grpc.StatusCode.RESOURCE_EXHAUSTED:
+                                if exec_count > attempt:
+                                    print('\033[35m', 'И снова грёбаный Экибастуз.', exec_count)
+                                    print('\033[33m', inspect.currentframe().f_back.f_code.co_name)
+                                    print(f'{func.__name__}', '\033[0m')
+                                time.sleep(YdbBase.TIMEOUT_SECONDS)
+                        elif isinstance(e, grpc.RpcError):
+                            print('\033[35m', 'Session not found', '\033[0m')
+                            self.init_driver()
+                        else:
+                            print('\033[36m', 'Необработанная ошибка', e, '\033[0m')
+                    if exec_count > attempt:
+                        break
+                return result
+
+            return wrapper
+
+        return exception_inner
+
     def select_user(self, name):
         return self.pool.execute_with_retries(
             f"SELECT id, name FROM users WHERE name = '{name}';",
@@ -117,7 +155,7 @@ class YdbBase:
             """,
         )[0]
 
-    @exception()
+    @exception(ret_count=2)
     def create_list(self, words, user, name, count):
         values = ', '.join(list(map(lambda item: f"('{item[0]}', '{item[1]}')", words)))
         tx = self.session.transaction().begin()
@@ -355,6 +393,8 @@ class YdbBase:
             f"REPLACE INTO colors (name, hex) "
             f"VALUES {values};"
         )
+
+
 
 
 if __name__ == '__main__':
