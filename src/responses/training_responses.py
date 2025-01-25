@@ -27,9 +27,6 @@ def query_words(list_id):
     return words, index, is_loaded
 
 
-def stop_training(state, rsp, user):
-    pass
-
 def end_list(state, rsp):
     state.pop('index', None)
     state['state'] = State.END_LIST
@@ -52,6 +49,7 @@ def next_word(state, rsp, words=None, ids=None, is_excellent=None):
     state['ids'] = json.dumps(ids)
 
     rsp['text'], rsp['tts'] = sources[STATE].question(word, is_excellent)
+    state['tts'] = rsp['tts']
     return state, rsp
 
 

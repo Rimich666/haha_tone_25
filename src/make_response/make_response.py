@@ -8,7 +8,7 @@ from responses.list_name_response import auto_name, confirm_name, refuse_name, q
 from responses.make_list_responses import make_list
 from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
 from responses.select_list_responses import begin_again, resume, whatever
-from responses.question_response import check_answer
+from responses.question_response import check_answer, stop_training
 from helpers.helpers import get_command, get_slots, get_close_response, reset, rebase
 from responses.training_responses import start_training, not_understand_training
 from setings.state import State
@@ -80,8 +80,9 @@ def make_response(intents, state, payload, session, tokens, original):
         },
         State.QUESTION: {
             'NO_COMMAND': [check_answer, state, rsp, tokens],
-            'SKIP': [skip_move],
-            'STOP': [skip_move]
+            'SKIP': [skip_word, state, rsp],
+            'STOP': [stop_training, user_id],
+            'HELP': [help_standalone],
         },
         State.END_LIST: {
             'NO_COMMAND': [unknown_end_list, state],

@@ -1,6 +1,7 @@
 from helpers.helpers import parse_state
 from repository.queries import set_is_learn
 from resources import sources
+from responses.initialize_response import get_start_message
 from responses.training_responses import next_word
 from setings.state import State
 
@@ -23,3 +24,7 @@ def check_answer(state, rsp, answer):
 
     return next_word(state, rsp, words, ids, True) if is_subset else select_hint(state, rsp)
 
+
+def stop_training(user):
+    text, tts = sources[STATE].stop()
+    return get_start_message(text, tts, user)
