@@ -76,3 +76,20 @@ SELECT * FROM (
     WHERE learned
     GROUP BY list_id) as c
     ON l.id = c.list_id
+
+
+SELECT list_id, id, audio_id
+FROM user_words
+WHERE id NOT IN (
+    (SELECT id FROM user_words
+    WHERE list_id = 70 AND audio_id NOTNULL
+    LIMIT 3)
+    UNION
+    (SELECT id FROM user_words
+    WHERE list_id = 69 AND audio_id NOTNULL
+    LIMIT 3)
+    UNION
+    (SELECT id FROM user_words
+    WHERE list_id = 71 AND audio_id NOTNULL
+    LIMIT 3)
+)

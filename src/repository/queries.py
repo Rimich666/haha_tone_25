@@ -1,4 +1,4 @@
-from repository import YdbBase, base
+from repository import base
 from repository.exception import exception
 
 
@@ -96,8 +96,12 @@ def select_without_file(words):
 
 
 def select_lists(user):
-    base.check_IAM()
     user_id = insert_user(user).rows[0].id
+    return select_lists_by_id(user_id)
+
+
+def select_lists_by_id(user_id):
+    base.check_IAM()
     lists = base.pool.execute_with_retries(
         f"""
             SELECT id, name FROM user_lists WHERE user_id = {user_id};
@@ -311,33 +315,3 @@ def select_all_audio():
     return base.pool.execute_with_retries(
         f"SELECT audio_id FROM user_words WHERE audio_id NOTNULL;",
     )[0].rows
-
-
-def exec_file(fn):
-    base.check_IAM()
-    with open(fn, 'r') as f:
-        query = f.read()
-    base.pool.execute_with_retries(query)
-
-
-def create_tables():
-    base.check_IAM()
-    base.exec_file(YdbBase.create)
-
-
-def drop_tables():
-    base.check_IAM()
-    base.exec_file(YdbBase.drop)
-
-
-def clear_tables():
-    base.check_IAM()
-    base.exec_file(YdbBase.clear)
-
-
-def insert_color(values):
-    base.check_IAM()
-    return base.session.transaction().execute(
-        f"REPLACE INTO colors (name, hex) "
-        f"VALUES {values};"
-    )

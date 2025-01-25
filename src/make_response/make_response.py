@@ -6,10 +6,12 @@ from responses.hint_response import understand_hint, next_synonym, skip_word, sp
 from responses.initialize_response import get_start_message, initialize
 from responses.list_name_response import auto_name, confirm_name, refuse_name, query_list_name
 from responses.make_list_responses import make_list
-from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
+from responses.select_list_name_response import select_list, confirm_select_name, refuse_select_name, on_tell_name
+
 from responses.select_list_responses import begin_again, resume, whatever
 from responses.question_response import check_answer, stop_training
-from helpers.helpers import get_command, get_slots, get_close_response, reset, rebase
+from helpers.helpers import get_command, get_slots, reset, rebase
+from responses.close_response import get_close_response
 from responses.training_responses import start_training, not_understand_training
 from setings.state import State
 
@@ -17,9 +19,6 @@ from setings.state import State
 def make_response(intents, state, payload, session, tokens, original):
     command = get_command(payload, intents)
     print(command)
-    if command == 'CLOSE':
-        return get_close_response()
-
     if command == 'RESET':
         return reset()
 
@@ -32,6 +31,9 @@ def make_response(intents, state, payload, session, tokens, original):
     user_id = state.get('user', None)
     is_old = not not user_id
     slots = get_slots(intents, command)
+
+    if command == 'CLOSE':
+        return get_close_response(user_id)
 
     def skip_move():
         return get_start_message('Тут ещё ничего не придумано', '', user_id)
@@ -107,7 +109,7 @@ def make_response(intents, state, payload, session, tokens, original):
             'SPELL': [spell, state, rsp],
             'SYNONYM': [synonym, state, rsp],
             'HELP': [help_standalone],
-            'STOP': [skip_move]
+            'STOP': [stop_training, user_id]
         }
     }
 

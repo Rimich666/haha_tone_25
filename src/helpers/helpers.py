@@ -6,6 +6,7 @@ from load_resource.load_audio import LoadAudio
 from repository.object_store import ObjectStore
 from repository.queries import select_lists, select_free_names, select_all_audio, clear_tables, drop_tables, \
     create_tables
+from responses.close_response import get_close_response
 from setings.setings import word_case
 
 
@@ -25,14 +26,6 @@ def get_slots(intents, command):
     if command == 'NO_COMMAND':
         return None
     return intents[command]['slots']
-
-
-def get_close_response():
-    print('get_close_response')
-    return {
-        "version": '1.0',
-        "response": {'text': '', 'end_session': True}
-    }
 
 
 def create_list_name(user, name):
@@ -76,7 +69,7 @@ def reset():
 
 def rebase():
     print('Пересоздаю таблицы.')
-    thread = threading.Thread(target=recreate_all_table())
+    thread = threading.Thread(target=recreate_all_table)
     thread.start()
     print('Почему?')
     return get_close_response()

@@ -2,7 +2,7 @@ from helpers.helpers import parse_state
 from repository.queries import reset_words_learning
 from resources import sources
 from responses.initialize_response import get_start_message
-from responses.select_list_name import query_select_name
+from responses.select_list_name_response import query_select_name
 from responses.training_responses import next_word
 from setings.state import State
 
