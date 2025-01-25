@@ -1,5 +1,5 @@
 from helpers.helpers import parse_state
-from repository import base
+from repository.queries import set_is_learn
 from resources import sources
 from responses.training_responses import next_word
 from setings.state import State
@@ -19,7 +19,7 @@ def check_answer(state, rsp, answer):
     is_subset = set(right).issubset(answer)
     if is_subset:
         id = ids.pop(index)
-        base.set_is_learn(id)
+        set_is_learn(id)
 
     return next_word(state, rsp, words, ids, True) if is_subset else select_hint(state, rsp)
 

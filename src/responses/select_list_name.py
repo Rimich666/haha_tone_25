@@ -1,5 +1,6 @@
 import random
-from repository import base
+
+from repository.queries import select_lists, get_list_id
 from resources import name_select
 from responses.initialize_response import get_start_message
 from responses.select_list_responses import upload_list
@@ -40,7 +41,7 @@ def next_name(state, rsp):
 
 
 def lists_list(user, state, rsp):
-    lists, user_id = base.select_lists(user)
+    lists, user_id = select_lists(user)
     if len(lists) == 0:
         return get_start_message(
             name_select.no_lists.text(),
@@ -59,7 +60,7 @@ def on_tell_name(original, user, state, rsp):
         rsp['tts'] = name_select.dont_understand.tts(original)
         return state, rsp
     name = original
-    list_id, is_loaded = base.get_list_id(user, name)
+    list_id, is_loaded = get_list_id(user, name)
     state['name'] = name
     if not list_id:
         return lists_list(user, state, rsp)
@@ -83,5 +84,5 @@ def select_list(user, slots, state, rsp):
         return query_select_name(state, rsp)
     name = slots['what']['value']
     state['name'] = name
-    list_id, is_loaded = base.get_list_id(user, name)
+    list_id, is_loaded = get_list_id(user, name)
     return upload_list(user, name, state, rsp) if list_id else lists_list(user, state, rsp)

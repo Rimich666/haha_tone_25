@@ -1,5 +1,5 @@
 from helpers.helpers import parse_state
-from repository import base
+from repository.queries import reset_words_learning
 from resources import sources
 from responses.initialize_response import get_start_message
 from responses.select_list_name import query_select_name
@@ -17,7 +17,7 @@ def again(state, rsp):
     list_id = state['list_id']
     _, words, _ = parse_state(state)
     ids = list(words.keys())
-    base.reset_words_learning(list_id)
+    reset_words_learning(list_id)
 
     return next_word(state, rsp, words, ids)
 

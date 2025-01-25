@@ -3,8 +3,9 @@ import threading
 import time
 
 from helpers.helpers import get_word_case
-from repository import base
 from load_resource.load_audio import LoadAudio
+from repository.queries import get_list_info, reset_words_learning, set_list_is_loaded, set_audio_ids, \
+    select_words_list, get_created_list
 from resources import sources
 from setings.state import State
 
@@ -34,9 +35,9 @@ async def load_audio(list_id):
         start = time.time()
         await asyncio.sleep(circle)
         circle += 1
-        is_created = base.get_created_list(list_id)
+        is_created = get_created_list(list_id)
         print('\033[32m', 'is_created:', is_created, '\033[0m')
-        words_list = base.select_words_list(list_id, False)
+        words_list = select_words_list(list_id, False)
         if not words_list:
             if is_created:
                 break
@@ -47,12 +48,12 @@ async def load_audio(list_id):
         result = [t.result() for t in tasks]
         print(result)
         if result:
-            base.set_audio_ids(result)
+            set_audio_ids(result)
 
         print('\033[32m', 'Круг №', circle, time.time() - start, 'секунд', '\033[0m')
         if is_created:
             break
-    base.set_list_is_loaded(list_id, True)
+    set_list_is_loaded(list_id, True)
 
 
 def start_load_thread(list_id):
@@ -68,7 +69,7 @@ def ready_training(state, rsp, name):
 
 
 def begin_again(state, rsp, list_id):
-    base.reset_words_learning(list_id)
+    reset_words_learning(list_id)
     return ready_training(state, rsp, state['name'])
 
 
@@ -93,7 +94,7 @@ def full_or_not(count, leaned, name, state, rsp):
 
 def upload_list(user, name, state, rsp):
     print('select_list')
-    list_id, _, count, learned = base.get_list_info(user, name)
+    list_id, _, count, learned = get_list_info(user, name)
     print(learned)
     thread = threading.Thread(target=start_load_thread, args=(list_id,))
     thread.start()

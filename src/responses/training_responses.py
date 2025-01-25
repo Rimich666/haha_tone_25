@@ -1,6 +1,6 @@
 import json
 import random
-from repository import base
+from repository.queries import get_list_is_loaded, select_words_list
 from resources import sources
 from setings.state import State
 
@@ -9,7 +9,7 @@ STATE = State.IS_READY
 
 def query_words(list_id):
     print('querying words...')
-    _, is_loaded = base.get_list_is_loaded(list_id)
+    _, is_loaded = get_list_is_loaded(list_id)
     print(is_loaded)
     words = {
         str(w['id']):
@@ -18,7 +18,7 @@ def query_words(list_id):
                 'de': w['de'],
                 'audio_id': w['audio_id'],
                 'learned': w['learned']
-            } for w in base.select_words_list(list_id, True)}
+            } for w in select_words_list(list_id, True)}
 
     print(words)
 

@@ -3,8 +3,9 @@ import random
 import threading
 
 from load_resource.load_audio import LoadAudio
-from repository import base
 from repository.object_store import ObjectStore
+from repository.queries import select_lists, select_free_names, select_all_audio, clear_tables, drop_tables, \
+    create_tables
 from setings.setings import word_case
 
 
@@ -35,10 +36,10 @@ def get_close_response():
 
 
 def create_list_name(user, name):
-    lists, user_id = base.select_lists(user)
+    lists, user_id = select_lists(user)
     names = [i.name for i in lists]
     if name == '' or name in names:
-        free_names = base.select_free_names(names)
+        free_names = select_free_names(names)
         return free_names[random.randrange(len(free_names))], user_id
     return name, user_id
 
@@ -47,21 +48,21 @@ def clear_all():
     print('clear_all')
     store = ObjectStore()
     loder = LoadAudio()
-    ids = base.select_all_audio()
+    ids = select_all_audio()
     if ids:
         for id in [i['audio_id']for i in ids]:
             loder.delete(id)
     store.delete()
-    base.clear_tables()
+    clear_tables()
 
 
 def recreate_all_table():
     print('clear')
     clear_all()
     print('drop')
-    base.drop_tables()
+    drop_tables()
     print('create')
-    base.create_tables()
+    create_tables()
     print("that's all")
 
 
