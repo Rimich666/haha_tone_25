@@ -25,6 +25,9 @@ class YdbBase:
         self.iam = ''
         self.token = ''
         self.expires = 0
+        self.reinit()
+
+    def reinit(self):
         self.create_jwt_token()
         self.create_IAM()
         self.init_driver()
@@ -73,5 +76,7 @@ class YdbBase:
         self.pool = ydb.QuerySessionPool(self.driver)
 
     def check_iam(self):
-        print(self.expires)
-        print(time.time())
+        ends_in = self.expires - time.time()
+        if ends_in < 1800:
+            print('IAM истекает через', ends_in // 60, 'минут')
+            self.reinit()
