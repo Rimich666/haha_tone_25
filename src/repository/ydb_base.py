@@ -75,7 +75,7 @@ class YdbBase:
         self.session = self.driver.table_client.session().create()
         self.pool = ydb.QuerySessionPool(self.driver)
 
-    def check_iam(self):
+    def check_IAM(self):
         ends_in = self.expires - time.time()
         if ends_in < 1800:
             print('IAM истекает через', ends_in // 60, 'минут')

@@ -31,10 +31,6 @@ class ListName(Resource):
             ' Если решение не будет принято - имя списка будет выбрано автоматически sil<[{sil}]>'''
         )
 
-    def help(self):
-        print('help')
-        return self._help.text(), self._help.tts()
-
     def mode(self):
         return self._intents
 

@@ -4,7 +4,7 @@ from responses.end_list_response import next_list, again, end_learn, unknown_end
 from responses.first_page_response import insert_list, show_lists, not_command, req_list_name, start_help, what_can
 from responses.hint_response import understand_hint, next_synonym, skip_word, spell, synonym
 from responses.initialize_response import get_start_message, initialize
-from responses.list_name_response import auto_name, confirm_name, refuse_name, help_request_name, query_list_name
+from responses.list_name_response import auto_name, confirm_name, refuse_name, query_list_name
 from responses.make_list_responses import make_list
 from responses.select_list_name import select_list, confirm_select_name, refuse_select_name, on_tell_name
 from responses.select_list_responses import begin_again, resume, whatever
@@ -36,6 +36,13 @@ def make_response(intents, state, payload, session, tokens, original):
     def skip_move():
         return get_start_message('Тут ещё ничего не придумано', '', user_id)
 
+    def help_standalone():
+        print('help_request_name')
+        rsp['text'], rsp['tts'] = resources.sources[state['state']].help(state['state'])
+        rsp['tts'] = rsp['tts'] + state.get('tts', '')
+        print(rsp['tts'])
+        return state, rsp
+
     switch_state = {
         State.INIT: {
             'NO_COMMAND': [initialize, user_name]
@@ -54,11 +61,11 @@ def make_response(intents, state, payload, session, tokens, original):
             'NO_COMMAND': [query_list_name, state, tokens, rsp],
             'YES': [confirm_name, state, rsp, user_name],
             'NO': [refuse_name, state, rsp],
-            'HELP': [help_request_name, state, rsp],
+            'HELP': [help_standalone],
         },
         State.CREATE_LIST: {
             'NO_COMMAND': [make_list, state, original, rsp],
-            'HELP': [skip_move],
+            'HELP': [help_standalone],
         },
         State.SELECT_LIST: {
             'AGAIN': [begin_again, state, rsp],
@@ -98,7 +105,7 @@ def make_response(intents, state, payload, session, tokens, original):
             'SKIP': [skip_word, state, rsp],
             'SPELL': [spell, state, rsp],
             'SYNONYM': [synonym, state, rsp],
-            'HELP': [skip_move],
+            'HELP': [help_standalone],
             'STOP': [skip_move]
         }
     }

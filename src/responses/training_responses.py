@@ -27,6 +27,9 @@ def query_words(list_id):
     return words, index, is_loaded
 
 
+def stop_training(state, rsp, user):
+    pass
+
 def end_list(state, rsp):
     state.pop('index', None)
     state['state'] = State.END_LIST

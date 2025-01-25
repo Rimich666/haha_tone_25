@@ -15,6 +15,7 @@ def insert_list(slots, user_name, state, rsp):
     state['user'] = id
     rsp['text'] = first.create_list.text(name)
     rsp['tts'] = first.create_list.tts(name)
+    state['tts'] = rsp['tts']
     return state, rsp
 
 

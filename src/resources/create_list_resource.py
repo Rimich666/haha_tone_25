@@ -34,6 +34,10 @@ class CreateList(Resource):
                 'Этот список плохо отразился на моём пищеварении. Хочу другой.'
             )
         ]
+        self._help = Texts(
+            'Просто введите список слов которые будете учить.',
+            'Просто введите список слов которые будете учить, и их перевод.'
+        )
 
     def bad_list(self):
         variant = self._bad_list[random.randrange(len(self._bad_list))]

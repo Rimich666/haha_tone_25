@@ -3,15 +3,15 @@ from repository.exception import exception
 
 
 def select_user(name):
-    base.check_iam()
+    base.check_IAM()
     return base.pool.execute_with_retries(
         f"SELECT id, name FROM users WHERE name = '{name}';",
     )[0]
 
 
 def insert_user(name):
-    base.check_iam()
-    user = base.select_user(name)
+    base.check_IAM()
+    user = select_user(name)
     if user.rows:
         return user
     return base.pool.execute_with_retries(
@@ -24,7 +24,7 @@ def insert_user(name):
 
 @exception()
 def insert_audio(word, file_name):
-    base.check_iam()
+    base.check_IAM()
     return base.pool.execute_with_retries(
         f"""
             INSERT INTO audio (de, file_path) 
@@ -34,7 +34,7 @@ def insert_audio(word, file_name):
 
 
 def insert_new_words(words):
-    base.check_iam()
+    base.check_IAM()
     values = ', '.join(list(map(
         lambda item: f"(CurrentUtcDatetime(), CurrentUtcDatetime(), Utf8('{item[0]}'), Utf8('{item[1]}'))", words)))
     return base.pool.execute_with_retries(
@@ -54,7 +54,7 @@ def insert_new_words(words):
 
 @exception(ret_count=2)
 def create_list(words, user, name, count):
-    base.check_iam()
+    base.check_IAM()
     values = ', '.join(list(map(lambda item: f"('{item[0]}', '{item[1]}')", words)))
     tx = base.session.transaction().begin()
 
@@ -82,7 +82,7 @@ def create_list(words, user, name, count):
 
 
 def select_without_file(words):
-    base.check_iam()
+    base.check_IAM()
     values = ', '.join(list(map(lambda item: f"('{item['id']}', Utf8('{item['de']}'))", words)))
     return base.pool.execute_with_retries(
         f"""
@@ -96,8 +96,8 @@ def select_without_file(words):
 
 
 def select_lists(user):
-    base.check_iam()
-    user_id = base.insert_user(user).rows[0].id
+    base.check_IAM()
+    user_id = insert_user(user).rows[0].id
     lists = base.pool.execute_with_retries(
         f"""
             SELECT id, name FROM user_lists WHERE user_id = {user_id};
@@ -106,7 +106,7 @@ def select_lists(user):
 
 
 def get_list_id(user, name):
-    base.check_iam()
+    base.check_IAM()
     res = base.pool.execute_with_retries(f"""
     SELECT id, is_loaded FROM user_lists WHERE user_id in 
         (SELECT id FROM users WHERE name = '{user}')
@@ -116,7 +116,7 @@ def get_list_id(user, name):
 
 @exception()
 def get_list_info(user, name):
-    base.check_iam()
+    base.check_IAM()
     res = base.pool.execute_with_retries(f"""
     SELECT * FROM (
         SELECT id, is_loaded, count
@@ -136,7 +136,7 @@ def get_list_info(user, name):
 
 
 def select_free_names(names):
-    base.check_iam()
+    base.check_IAM()
     values = ', '.join(list(map(lambda name: f"('{name}')", names))) if names else "('')"
     result = base.pool.execute_with_retries(f"""
     SELECT name FROM (SELECT DISTINCT * FROM
@@ -151,7 +151,7 @@ def select_free_names(names):
 
 @exception()
 def select_words_list(list_id, is_processed=None):
-    base.check_iam()
+    base.check_IAM()
     processed_string = '' if is_processed is None else f'AND is_processed {'' if is_processed else 'ISNULL'}'
     query = f"""
     SELECT ru, w.de as de, w.id as id, audio_id, is_processed, file_path, learned 
@@ -175,7 +175,7 @@ def select_words_list(list_id, is_processed=None):
 
 @exception()
 def set_audio_ids(audio_ids):
-    base.check_iam()
+    base.check_IAM()
     audio, processed = (zip(*map(
         lambda item: (f"WHEN {item[0]} THEN Utf8('{item[1]}')", f"WHEN {item[0]} THEN {item[2]}"), audio_ids)))
 
@@ -194,7 +194,7 @@ def set_audio_ids(audio_ids):
 
 @exception()
 def set_audio_id(*args, is_processed=False):
-    base.check_iam()
+    base.check_IAM()
     query_text = f"""
         UPDATE user_words 
         SET audio_id = '{args[1]}'{', is_processed = True' if is_processed else ''} 
@@ -210,7 +210,7 @@ def set_audio_id(*args, is_processed=False):
 
 @exception()
 def set_is_processed(id):
-    base.check_iam()
+    base.check_IAM()
     return base.pool.execute_with_retries(
         f"""
         UPDATE user_words SET is_processed = True WHERE id = {id} RETURNING id;""")[0].rows
@@ -218,7 +218,7 @@ def set_is_processed(id):
 
 @exception()
 def get_file_path(word):
-    base.check_iam()
+    base.check_IAM()
     return base.pool.execute_with_retries(
         f"SELECT file_path FROM audio WHERE de = '{word}';",
     )[0].rows
@@ -226,7 +226,7 @@ def get_file_path(word):
 
 @exception()
 def get_added_words(list_id, is_exists):
-    base.check_iam()
+    base.check_IAM()
     condition = f" AND audio_id IS NOT NULL" if is_exists else ""
     return base.pool.execute_with_retries(
         f"""SELECT id, audio_id 
@@ -237,7 +237,7 @@ def get_added_words(list_id, is_exists):
 
 
 def get_words_by_id(ids):
-    base.check_iam()
+    base.check_IAM()
     value = f"( {', '.join(ids)} )"
     return base.pool.execute_with_retries(
         f"SELECT id, de FROM words WHERE id IN {value};",
@@ -246,7 +246,7 @@ def get_words_by_id(ids):
 
 @exception()
 def get_list_is_loaded(id):
-    base.check_iam()
+    base.check_IAM()
     res = base.pool.execute_with_retries(
         f"SELECT id, is_loaded FROM user_lists WHERE id = {id};"
     )[0].rows
@@ -255,7 +255,7 @@ def get_list_is_loaded(id):
 
 @exception()
 def set_list_is_loaded(id, is_loaded):
-    base.check_iam()
+    base.check_IAM()
     res = base.pool.execute_with_retries(f"""
         UPDATE user_lists SET is_loaded = {is_loaded} WHERE id = {id} RETURNING id, is_loaded;
     """)[0].rows
@@ -264,7 +264,7 @@ def set_list_is_loaded(id, is_loaded):
 
 @exception()
 def set_created_list(list_id):
-    base.check_iam()
+    base.check_IAM()
     res = base.pool.execute_with_retries(f"""
         UPDATE user_lists SET is_created = TRUE WHERE id = {list_id} RETURNING id, is_loaded;
     """)
@@ -272,14 +272,14 @@ def set_created_list(list_id):
 
 @exception()
 def get_created_list(list_id):
-    base.check_iam()
+    base.check_IAM()
     return base.pool.execute_with_retries(f"""
         SELECT is_created FROM user_lists WHERE id = {list_id};
     """)[0].rows[0].is_created
 
 
 def reset_list_is_loaded(list_id):
-    base.check_iam()
+    base.check_IAM()
     tx = base.session.transaction().begin()
     tx.execute(
         f"UPDATE user_words SET audio_id = NULL WHERE list_id = {list_id};"
@@ -291,7 +291,7 @@ def reset_list_is_loaded(list_id):
 
 
 def reset_words_learning(list_id):
-    base.check_iam()
+    base.check_IAM()
     base.pool.execute_with_retries(f"""
         UPDATE user_words SET learned = FALSE WHERE list_id = {list_id};
     """)
@@ -299,7 +299,7 @@ def reset_words_learning(list_id):
 
 @exception()
 def set_is_learn(id):
-    base.check_iam()
+    base.check_IAM()
     query = f"""
         UPDATE user_words SET learned = TRUE WHERE id = {id};
     """
@@ -307,36 +307,36 @@ def set_is_learn(id):
 
 
 def select_all_audio():
-    base.check_iam()
+    base.check_IAM()
     return base.pool.execute_with_retries(
         f"SELECT audio_id FROM user_words WHERE audio_id NOTNULL;",
     )[0].rows
 
 
 def exec_file(fn):
-    base.check_iam()
+    base.check_IAM()
     with open(fn, 'r') as f:
         query = f.read()
     base.pool.execute_with_retries(query)
 
 
 def create_tables():
-    base.check_iam()
+    base.check_IAM()
     base.exec_file(YdbBase.create)
 
 
 def drop_tables():
-    base.check_iam()
+    base.check_IAM()
     base.exec_file(YdbBase.drop)
 
 
 def clear_tables():
-    base.check_iam()
+    base.check_IAM()
     base.exec_file(YdbBase.clear)
 
 
 def insert_color(values):
-    base.check_iam()
+    base.check_IAM()
     return base.session.transaction().execute(
         f"REPLACE INTO colors (name, hex) "
         f"VALUES {values};"

@@ -69,4 +69,5 @@ def make_list(state, original, rsp):
     state['list_id'] = list_id
     rsp['text'] = sources[STATE].list_created.text(state['name'])
     rsp['tts'] = sources[STATE].list_created.tts(state['name'])
+    state['tts'] = rsp['tts']
     return state, rsp

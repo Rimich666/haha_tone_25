@@ -22,17 +22,8 @@ def auto_name(state, rsp, user_name):
 def confirm_name(state, rsp, user_name):
     name = state.get('name', '')
     attempt = state.pop('attempt', None)
-
     return insert_list(
         None if attempt == len(list_name_res.extents) else {'what': {'value': name}}, user_name, state, rsp)
-
-
-def help_request_name(state, rsp):
-    print('help_request_name')
-    rsp['text'], rsp['tts'] = sources[STATE].help()
-    rsp['tts'] = rsp['tts'] + state.get('tts', '')
-    print(rsp['tts'])
-    return state, rsp
 
 
 def refuse_name(state, rsp):

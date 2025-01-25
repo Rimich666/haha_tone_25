@@ -36,6 +36,3 @@ class NameSelectList(Resource):
             ' Можете согласится, или отклонить выбранное имя.'
             ' Если решение не будет принято - имя списка будет выбрано автоматически'
         )
-
-    def help(self):
-        return self._help.text(), self._help.tts()
