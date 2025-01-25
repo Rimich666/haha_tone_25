@@ -11,6 +11,7 @@ STATE = State.QUESTION
 def select_hint(state, rsp):
     state['state'] = State.HINT
     rsp['text'], rsp['tts'] = sources[STATE].select_hint()
+    state['tts'] = rsp['tts']
     return state, rsp
 
 

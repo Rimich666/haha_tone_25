@@ -8,7 +8,7 @@ class CreateList(Resource):
     def __init__(self):
         super().__init__()
         self._intents = ['HELP']
-        self.list_created = Texts(
+        self._list_created = Texts(
             'Список "{}" создан. Выбрать его для тренинга?',
             'Список {} создан. sil <[1500]> Хотите выбрать его для начала тренинга?'
         )
@@ -35,7 +35,7 @@ class CreateList(Resource):
             )
         ]
         self._help = Texts(
-            'Просто введите список слов которые будете учить.',
+            'Введите список слов в формате "слово - перевод". Пример: "Das Haus - дом."',
             'Просто введите список слов которые будете учить, и их перевод.'
         )
 
@@ -43,3 +43,6 @@ class CreateList(Resource):
         variant = self._bad_list[random.randrange(len(self._bad_list))]
 
         return variant.text(), variant.tts()
+
+    def list_created(self, name):
+        return self._list_created.text(name), self._list_created.tts(name)

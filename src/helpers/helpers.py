@@ -3,9 +3,9 @@ import random
 import threading
 
 from load_resource.load_audio import LoadAudio
+from repository.helper_queries import clear_tables, drop_tables, create_tables
 from repository.object_store import ObjectStore
-from repository.queries import select_lists, select_free_names, select_all_audio, clear_tables, drop_tables, \
-    create_tables
+from repository.queries import select_lists, select_free_names, select_all_audio
 from responses.close_response import get_close_response
 from setings.setings import word_case
 

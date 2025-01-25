@@ -1,6 +1,7 @@
 from load_resource.load_audio import LoadAudio
 from resources.resource import Resource
 from resources.texts import Texts
+from setings.setings import DEBUG
 
 
 class Ready(Resource):
@@ -30,7 +31,7 @@ class Ready(Resource):
 
     def question(self, word, excellent):
         audio = f'<{self.speaker}/{self.skil}/{word['audio_id']}.opus">'
-        return self._question.text(word['de'], word['ru']), f'{self.grade(excellent)} {audio}'
+        return self._question.text(word['de'], f'{word['ru'] if DEBUG else ""}'), f'{self.grade(excellent)} {audio}'
 
     def end_list(self):
         return self._end_list.text(), self._end_list.tts(self.sil)

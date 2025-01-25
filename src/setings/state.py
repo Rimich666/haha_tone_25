@@ -10,6 +10,7 @@ class State(object):
     CREATED_LIST = 8
     NAME_SELECT = 9
     HINT = 10
+    WAIT_CREATE_LIST = 11
 
     SELECT_WORDS = 30
 

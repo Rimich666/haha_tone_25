@@ -87,7 +87,7 @@ def make_response(intents, state, payload, session, tokens, original):
             'HELP': [help_standalone],
         },
         State.END_LIST: {
-            'NO_COMMAND': [unknown_end_list, state],
+            'NO_COMMAND': [unknown_end_list, state, original],
             'NO': [end_learn, state],
             'FIX': [again, state, rsp],
             'ANOTHER': [next_list, state, rsp],
