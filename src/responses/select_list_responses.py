@@ -7,6 +7,7 @@ from load_resource.load_audio import LoadAudio
 from repository.queries import get_list_info, reset_words_learning, set_list_is_loaded, set_audio_ids, \
     select_words_list, get_created_list
 from resources import sources
+from responses.training_responses import end_list
 from setings.state import State
 
 STATE = State().SELECT_LIST
@@ -24,11 +25,6 @@ async def load_audio(list_id):
                 break
             await asyncio.sleep(0.3)
         return id, audio_id, is_processed
-
-        if is_processed:
-            return id, audio_id
-            res = base.set_audio_id(id, audio_id, is_processed=True)
-        return is_processed and res
 
     circle = 0
     while True:
@@ -61,6 +57,7 @@ def start_load_thread(list_id):
 
 
 def ready_training(state, rsp, name):
+    state.pop('is_learned', None)
     state['state'] = State.IS_READY
     rsp['text'] = sources[STATE].ready.text(name)
     rsp['tts'] = sources[STATE].ready.tts(name)
@@ -74,7 +71,8 @@ def begin_again(state, rsp, list_id):
 
 
 def resume(state, rsp):
-    return ready_training(state, rsp, state['name'])
+    is_learned = state.pop('is_learned', False)
+    return end_list(state, rsp) if is_learned else ready_training(state, rsp, state['name'])
 
 
 def whatever(original, state, rsp):
@@ -100,6 +98,7 @@ def upload_list(user, name, state, rsp):
     thread.start()
 
     state['state'] = State.IS_READY
+    state['is_learned'] = count == learned
     state['name'] = name
     state['list_id'] = list_id
     return full_or_not(count, learned, name, state, rsp) if learned else ready_training(state, rsp, name)
