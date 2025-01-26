@@ -5,7 +5,7 @@ from resources.texts import Texts
 class Hint(Resource):
     def __init__(self):
         super().__init__()
-        self._intents = ['NEXT', 'SKIP', 'SPELL', 'SYNONYM', 'HELP', 'STOP']
+        self._intents = ['SKIP', 'SPELL', 'SYNONYM', 'HELP', 'STOP']
         self._spell = Texts(
             'Первый слог в этом слове - "{}"',
             'Первый слог в этом слове - "{}"'

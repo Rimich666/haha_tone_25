@@ -23,6 +23,12 @@ def understand_hint(state, rsp):
 
 
 def next_synonym(state, rsp):
+    synonyms = json.loads(state['synonyms'])
+    synonym = state['synonym']
+    if synonym == len(synonyms):
+        return
+    state['synonym'] = synonym
+
     print('next synonym', state)
     return state, rsp
 
