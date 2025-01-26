@@ -17,7 +17,8 @@ def skip_word(state, rsp):
 
 
 def understand_hint(state, rsp):
-    print('understand hint', state)
+    rsp['text'], rsp['tts'] = sources[STATE].not_understand()
+    state['tts'] = rsp['tts']
     return state, rsp
 
 

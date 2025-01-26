@@ -24,9 +24,16 @@ class Hint(Resource):
             Вам доступны подсказки: "Дай синоним", "Подскажи первый слог" 
             '''
         )
+        self._not_understand = Texts(
+            'Подсказать первый слог или синоним?',
+            'Извините, вынуждена переспросить. Вам подсказать первый слог? Дать синоним? Или пропустить слово?'
+        )
 
     def spell(self, spell):
         return self._spell.text(spell), self._spell.tts(spell)
 
     def synonym(self, synonym):
         return self._synonym.text(synonym), self._synonym.tts(synonym)
+
+    def not_understand(self):
+        return self._not_understand.text(), self._not_understand.tts()
