@@ -30,10 +30,12 @@ def make_response(intents, state, payload, session, tokens, original):
     rsp = {'text': '', 'end_session': False}
     user_id = state.get('user', None)
     is_old = not not user_id
-    slots = get_slots(intents, command)
-
     if command == 'CLOSE':
         return get_close_response(user_id)
+
+    slots = get_slots(intents, command)
+
+
 
     def skip_move():
         return get_start_message('Тут ещё ничего не придумано', '', user_id)
